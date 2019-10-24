@@ -57,6 +57,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -72,8 +73,8 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SharpWood\SharpWood.csproj">
-      <Project>{c5e6df0d-2e2a-421d-bed0-9a4cb81a7a3c}</Project>
+    <ProjectReference Include="..\SharpWood.csproj">
+      <Project>{C5E6DF0D-2E2A-421D-BED0-9A4CB81A7A3C}</Project>
       <Name>SharpWood</Name>
     </ProjectReference>
   </ItemGroup>

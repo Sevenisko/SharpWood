@@ -68,18 +68,7 @@ namespace Sevenisko.SharpWood
 
             newPlayer.ID = playerID;
 
-            object ret = Oakwood.CallFunction("oak_player_name_get", new object[] { playerID })[1];
-
-            if(ret != null)
-            {
-                newPlayer.Name = ret.ToString();
-            }
-            else
-            {
-                newPlayer.Name = "|>>>WithoutAnyName<<<|";
-            }
-
-            Console.WriteLine(newPlayer.Name + "#" + newPlayer.ID);
+            newPlayer.Name = OakPlayer.GetName(newPlayer);
 
             Random rand = new Random();
 
@@ -89,13 +78,15 @@ namespace Sevenisko.SharpWood
 
             newPlayer.Health = 200.0f;
 
-            if (newPlayer.Name == "|>>>WithoutAnyName<<<|")
+            if (newPlayer.Name == "|>>>failed<<<|")
             {
                 OakPlayer.Kick(newPlayer, "Player name cannot be empty!");
             }
             else
             {
                 Oakwood.Players.Add(newPlayer);
+
+                OakPlayer.SetModel(newPlayer, newPlayer.Model);
 
                 OakPlayer.Spawn(newPlayer, new OakVec3(-1986.852539f, -5.089742f, 25.776871f));
 

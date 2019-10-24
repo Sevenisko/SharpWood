@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
 namespace Sevenisko.SharpWood
 {
@@ -10,6 +11,41 @@ namespace Sevenisko.SharpWood
         public static List<OakwoodPlayer> GetList()
         {
             return Oakwood.Players;
+        }
+
+        public static bool SpawnTempWeapons(OakwoodPlayer player)
+        {
+            object[] response = Oakwood.CallFunction("oak_temp_weapons_spawn", new object[] { player.ID });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        internal static string GetName(OakwoodPlayer player)
+        {
+            object[] ret = Oakwood.CallFunction("oak_player_name_get", new object[] { player.ID });
+            int retCode = int.Parse(ret[0].ToString());
+            string plName = "|>>>NoName<<<|";
+
+            if (ret[1] != null)
+            {
+                plName = ret[1].ToString();
+            }
+
+            if(retCode != 0 || plName == "|>>>NoName<<<|")
+            {
+                return "|>>>failed<<<|";
+            }
+            else
+            {
+                return plName;
+            }
         }
 
         public static bool Spawn(OakwoodPlayer player, OakVec3 pos)
@@ -182,14 +218,21 @@ namespace Sevenisko.SharpWood
 
         public static OakVec3 GetPosition(OakwoodPlayer player)
         {
-            Console.WriteLine(Oakwood.CallFunction("oak_player_position_get", new object[] { player.ID })[1].ToString());
-            return new OakVec3(0, 0, 0);
+            object[] pos = (object[])Oakwood.CallFunctionArray("oak_player_position_get", new object[] { player.ID })[1];
+
+            if(pos == null)
+            {
+                return new OakVec3(0, 0, 0);
+            }
+
+            return new OakVec3(float.Parse(pos[0].ToString()), float.Parse(pos[1].ToString()), float.Parse(pos[2].ToString()));
         }
 
         public static OakVec3 GetDirection(OakwoodPlayer player)
         {
-            Console.WriteLine(Oakwood.CallFunction("oak_player_direction_get", new object[] { player.ID })[1].ToString());
-            return new OakVec3(0, 0, 0);
+            object[] dir = (object[])Oakwood.CallFunction("oak_player_direction_get", new object[] { player.ID })[1];
+
+            return new OakVec3(float.Parse(dir[0].ToString()), float.Parse(dir[1].ToString()), float.Parse(dir[2].ToString()));
         }
 
         public static int GetVisibility(OakwoodPlayer player, Visibility type)
@@ -219,13 +262,13 @@ namespace Sevenisko.SharpWood
             return Oakwood.Vehicles;
         }
 
-        public static bool Spawn(OakwoodVehicleModel model, OakVec3 position, float angle)
+        public static OakwoodVehicle Spawn(OakwoodVehicleModel model, OakVec3 position, float angle)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_spawn", new object[] { model.Modelname, model.Modelname.Length, new float[] { position.x, position.y, position.z }, angle })[0].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_spawn", new object[] { model.Modelname + "\0", model.Modelname.Length + 1, new float[] { position.x, position.y, position.z }, angle })[0].ToString());
 
             if (ret == -1)
             {
-                return false;
+                return null;
             }
 
             OakwoodVehicle newVeh = new OakwoodVehicle();
@@ -234,7 +277,7 @@ namespace Sevenisko.SharpWood
 
             Oakwood.Vehicles.Add(newVeh);
 
-            return true;
+            return newVeh;
         }
 
         public static bool Despawn(OakwoodVehicle vehicle)
@@ -424,11 +467,9 @@ namespace Sevenisko.SharpWood
     #region HUD Functions
     public class OakHUD
     {
-        public static bool Fade(OakwoodPlayer player, OakwoodFade type, int duration, Color color)
+        public static bool Fade(OakwoodPlayer player, OakwoodFade type, int duration, int color)
         {
-            int cl = int.Parse(color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2"));
-
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_fadeout", new object[] { player.ID, (int)type, duration, cl })[0].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_hud_fadeout", new object[] { player.ID, (int)type, duration, color })[0].ToString());
 
             if (ret == 0)
             {
@@ -454,7 +495,7 @@ namespace Sevenisko.SharpWood
 
         public static bool Announce(OakwoodPlayer player, string text, float duration)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_announce", new object[] { player.ID, text, text.Length, duration })[0].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_hud_announce", new object[] { player.ID, text + "\0", text.Length + 1, duration })[0].ToString());
 
             if (ret == 0)
             {
@@ -468,7 +509,7 @@ namespace Sevenisko.SharpWood
         {
             int cl = int.Parse(color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2"));
 
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_message", new object[] { player.ID, text, text.Length, cl })[0].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_hud_message", new object[] { player.ID, text + "\0", text.Length + 1, cl })[0].ToString());
 
             if (ret == 0)
             {

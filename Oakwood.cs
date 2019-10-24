@@ -116,15 +116,55 @@ namespace Sevenisko.SharpWood
                     result = error;
                     Console.WriteLine("[ERROR] Runtime error:" + error);
                 }
-
-                if(functionName != "oak__heartbeat")
-                {
-                    Console.WriteLine(functionName);
-                    Console.WriteLine(statuscode);
-                    Console.WriteLine(result);
-                }
             }
             
+            return new object[] { statuscode, result };
+        }
+
+        internal static object[] CallFunctionArray(string functionName, params object[] args)
+        {
+            MPackArray arg = new MPackArray();
+
+            if (args != null)
+            {
+                foreach (object a in args)
+                {
+                    arg.Add(MPack.From(a));
+                }
+            }
+
+            MPackArray req = new MPackArray();
+            req.Add(functionName);
+            req.Add(arg);
+
+            byte[] data = req.EncodeToBytes();
+
+            reqSocket.Send(data);
+
+            byte[] d = reqSocket.Receive();
+
+            MPackArray res;
+
+            int statuscode = -1;
+            object[] result = null;
+
+            if (d != null)
+            {
+                res = (MPackArray)MPack.ParseFromBytes(d);
+
+                Console.WriteLine(res.ToString());
+
+                statuscode = int.Parse(res[0].Value.ToString());
+                result = new object[] { res[1][0].Value, res[1][1].Value, res[1][2].Value };
+
+                if (res[1].ToString().Contains("Error"))
+                {
+                    string error = res[1].ToString().Split(':')[1];
+                    result[0] = error;
+                    Console.WriteLine("[ERROR] Runtime error:" + error);
+                }
+            }
+
             return new object[] { statuscode, result };
         }
 
