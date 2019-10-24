@@ -28,11 +28,11 @@ SharpWood is first community-made Oakwood API wrapper, which is using C# and its
 
 ## Used libraries
 
-- [nanomsg]: https://github.com/nanomsg/nanomsg
+- [nanomsg]: https://github.com/nanomsg/nanomsg	"nanomsg"
 
-- [NNanomsg]: https://github.com/mhowlett/NNanomsg
+- [NNanomsg]: https://github.com/mhowlett/NNanomsg	"NNanomsg"
 
-- [MPack]:  https://github.com/caesay/MPack
+- [MPack]:  https://github.com/caesay/MPack	"MPack"
 
 
 
