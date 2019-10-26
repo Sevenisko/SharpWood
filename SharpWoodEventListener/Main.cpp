@@ -3,6 +3,7 @@
 #include <cstring>
 #include <nn.h>
 #include <survey.h>
+#include <reqrep.h>
 #include <stdio.h>
 
 using namespace std;
@@ -13,20 +14,27 @@ typedef struct Functions
 	void (*WriteLine)(const char* msg);
 } NanoFunctions;
 
-int socket;
-
-EXPORT void StartClient(const char* url, NanoFunctions functions)
+typedef struct Ret
 {
-	socket = nn_socket(AF_SP, NN_RESPONDENT);
+	char* buffer;
+	int length;
+};
+
+int recvSocket;
+int reqSocket;
+
+EXPORT void StartEventClient(const char* url, NanoFunctions functions)
+{
+	recvSocket = nn_socket(AF_SP, NN_RESPONDENT);
 	char t[28];
-	sprintf_s(t, "%d", socket);
-	assert(socket >= 0);
-	assert(nn_connect(socket, url) >= 0);
-	functions.WriteLine("[INFO] Started listener thread.");
+	sprintf_s(t, "%d", recvSocket);
+	assert(recvSocket >= 0);
+	assert(nn_connect(recvSocket, url) >= 0);
+	functions.WriteLine("[INFO] Started event thread.");
 	while (1)
 	{
 		char* buf = NULL;
-		int bytes = nn_recv(socket, &buf, NN_MSG, 0);
+		int bytes = nn_recv(recvSocket, &buf, NN_MSG, 0);
 		if (bytes >= 0)
 		{
 			functions.DataReceived(buf, bytes);
@@ -35,7 +43,41 @@ EXPORT void StartClient(const char* url, NanoFunctions functions)
 	}
 }
 
-EXPORT void SendData(const char* msg)
+EXPORT void StartFuncClient(const char* url, NanoFunctions functions)
+{
+	reqSocket = nn_socket(AF_SP, NN_REQ);
+	assert(reqSocket >= 0);
+	assert(nn_connect(reqSocket, url) >= 0);
+	functions.WriteLine("[INFO] Started API thread.");
+}
+
+EXPORT void SendFuncData(unsigned short* buf, int bufSize)
+{
+	int bytes = nn_send(reqSocket, buf, bufSize, 0);
+}
+
+EXPORT Ret RecvFuncData()
+{
+	while (1)
+	{
+		char* buf = NULL;
+		char* retBuf = NULL;
+		int bytes = nn_recv(reqSocket, &buf, NN_MSG, 0);
+		if (bytes >= 0)
+		{
+			retBuf = buf;
+			nn_freemsg(buf);
+		}
+
+		Ret retVal;
+		retVal.buffer = retBuf;
+		retVal.length = bytes;
+
+		return retVal;
+	}
+}
+
+EXPORT void SendEventData(const char* msg)
 {
 	char d[8];
 
@@ -43,11 +85,16 @@ EXPORT void SendData(const char* msg)
 
 	int size = strlen(d) + 1;
 
-	int bytes = nn_send(socket, d, size, 0);
+	int bytes = nn_send(recvSocket, d, size, 0);
 	assert(bytes == size);
 }
 
-EXPORT int StopClient()
+EXPORT int StopEventClient()
 {
-	return nn_shutdown(socket, 0);
+	return nn_shutdown(recvSocket, 0);
+}
+
+EXPORT int StopFuncClient()
+{
+	return nn_shutdown(reqSocket, 0);
 }
