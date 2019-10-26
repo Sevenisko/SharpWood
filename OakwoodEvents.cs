@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
 
 namespace Sevenisko.SharpWood
 {
@@ -23,11 +24,13 @@ namespace Sevenisko.SharpWood
         public delegate void OnPHit(OakwoodPlayer player, OakwoodPlayer attacker, float damage);
         public static event OnPHit OnPlayerHit;
 
-        public delegate void OnPVehUse(OakwoodVehicle vehicle, OakwoodPlayer player, VehicleSeat seat, VehicleEnterState leaveState);
+        public delegate void OnPVehUse(OakwoodVehicle vehicle, OakwoodPlayer player, bool success, VehicleSeat seat, VehicleEnterState leaveState);
         public static event OnPVehUse OnPlayerVehicleUse;
 
-        public delegate void OnPKey(OakwoodPlayer player, VirtualKey key, bool isDown);
-        public static event OnPKey OnPlayerKey;
+        public delegate void OnPKeyUp(OakwoodPlayer player, VirtualKey key);
+        public static event OnPKeyUp OnPlayerKeyDown;
+        public delegate void OnPKeyDown(OakwoodPlayer player, VirtualKey key);
+        public static event OnPKeyDown OnPlayerKeyUp;
 
         public delegate void OnPDeath(OakwoodPlayer player);
         public static event OnPDeath OnPlayerDeath;
@@ -41,9 +44,13 @@ namespace Sevenisko.SharpWood
         public delegate void OnPChat(OakwoodPlayer player, string text);
         public static event OnPChat OnPlayerChat;
 
+        public delegate void OnCBreak(CtrlType ctrlType);
+        public static event OnCBreak OnConsoleBreak;
+
         internal static bool start(object[] args)
         {
             OakMisc.Log($"SharpWolf {Oakwood.GetVersion()} successfuly started on this server!");
+            Console.WriteLine($"[INFO] Registered {OakwoodCommandSystem.GetCommandCount()} commands, {OakwoodCommandSystem.GetEventCount()} events");
             if(OnStart != null)
             {
                 OnStart();
@@ -56,6 +63,16 @@ namespace Sevenisko.SharpWood
             if(OnStop != null)
             {
                 OnStop();
+            }
+            return true;
+        }
+
+        internal static bool OnConBreak(object[] args)
+        {
+            CtrlType type = (CtrlType)args[0];
+            if(OnConsoleBreak != null)
+            {
+                OnConsoleBreak(type);
             }
             return true;
         }
@@ -88,7 +105,7 @@ namespace Sevenisko.SharpWood
 
                 OakPlayer.SetModel(newPlayer, newPlayer.Model);
 
-                OakPlayer.Spawn(newPlayer, new OakVec3(-1986.852539f, -5.089742f, 25.776871f));
+                OakPlayer.Spawn(newPlayer, new OakVec3(-1986.852539f, -5.089742f, 25.776871f), 180.0f);
 
                 if (OnPlayerConnect != null)
                 {
@@ -171,8 +188,9 @@ namespace Sevenisko.SharpWood
         {
             int vehID = int.Parse(args[0].ToString());
             int plID = int.Parse(args[1].ToString());
-            int sID = int.Parse(args[2].ToString());
-            int e = int.Parse(args[3].ToString());
+            bool success = Convert.ToBoolean(int.Parse(args[2].ToString()));
+            int sID = int.Parse(args[3].ToString());
+            int e = int.Parse(args[4].ToString());
 
             OakwoodPlayer player = null;
             OakwoodVehicle vehicle = null;
@@ -197,7 +215,7 @@ namespace Sevenisko.SharpWood
 
             if(OnPlayerVehicleUse != null)
             {
-                OnPlayerVehicleUse(vehicle, player, (VehicleSeat)sID, (VehicleEnterState)e);
+                OnPlayerVehicleUse(vehicle, player, success, (VehicleSeat)sID, (VehicleEnterState)e);
             }
 
             return true;
@@ -222,9 +240,19 @@ namespace Sevenisko.SharpWood
                 }
             }
 
-            if(OnPlayerKey != null)
+            if(isD == 0)
             {
-                OnPlayerKey(player, (VirtualKey)vKey, isDown);
+                if (OnPlayerKeyDown != null)
+                {
+                    OnPlayerKeyDown(player, (VirtualKey)vKey);
+                }
+            }
+            else
+            {
+                if (OnPlayerKeyUp != null)
+                {
+                    OnPlayerKeyUp(player, (VirtualKey)vKey);
+                }
             }
 
             return true;
