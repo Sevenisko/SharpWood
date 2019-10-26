@@ -14,24 +14,29 @@ using System.Runtime.InteropServices;
 
 namespace Sevenisko.SharpWood
 {
-    internal class OakwoodCommand
-    {
-        public string Command;
-        public string[] Arguments;
-    }
-
     public class OakwoodPlayer
     {
         public string Name;
         public int ID;
         public string Model;
         public float Health;
+        public int TpaID;
+        public float Heading;
     }
 
     public class OakwoodVehicle
     {
         public int ID;
         public string Model;
+    }
+
+    public enum CtrlType
+    {
+        CtrlC = 0,
+        CtrlBreak,
+        CtrlClose,
+        CtrlLogoff = 5,
+        CtrlShutdown
     }
 
     public class Oakwood
@@ -43,7 +48,7 @@ namespace Sevenisko.SharpWood
 
         private static string UniqueID;
 
-        public delegate bool HandlerRoutine(CtrlTypes CtrlType);
+        public delegate bool HandlerRoutine(CtrlType CtrlType);
 
         [DllImport("Kernel32")]
         public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
@@ -58,21 +63,9 @@ namespace Sevenisko.SharpWood
 
         static RequestSocket reqSocket;
 
-        public enum CtrlTypes
+        private static bool ConsoleCtrlCheck(CtrlType ctrlType)
         {
-            CTRL_C_EVENT = 0,
-            CTRL_BREAK_EVENT,
-            CTRL_CLOSE_EVENT,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT
-        }
-
-        private static bool ConsoleCtrlCheck(CtrlTypes ctrlType)
-        {
-            APIThread.Abort();
-            ListenerThread.Abort();
-            EventListener.StopClient();
-            Environment.Exit(0);
+            OakwoodCommandSystem.CallEvent("shConBreak", new object[] { ctrlType });
             return true;
         }
 
@@ -152,8 +145,6 @@ namespace Sevenisko.SharpWood
             {
                 res = (MPackArray)MPack.ParseFromBytes(d);
 
-                Console.WriteLine(res.ToString());
-
                 statuscode = int.Parse(res[0].Value.ToString());
                 result = new object[] { res[1][0].Value, res[1][1].Value, res[1][2].Value };
 
@@ -182,68 +173,38 @@ namespace Sevenisko.SharpWood
                 Marshal.Copy(data, d, 0, length);
 
                 MPack rec = MPack.ParseFromBytes(d);
+
                 string eventName = rec[0].ToString();
 
-                object arg1;
-                object arg2;
-                object arg3;
-                object arg4;
-                object arg5;
+                List<object> args = new List<object>();
 
-                try
+                foreach(MPack v in ((MPackArray)rec).Skip(1))
                 {
-                    arg1 = rec[1].ToString();
-                }
-                catch
-                {
-                    arg1 = -5;
+                    args.Add(v.Value);
                 }
 
-                try
+                if(eventName != "playerKey")
                 {
-                    arg2 = rec[2].ToString();
-                }
-                catch
-                {
-                    arg2 = -5;
+                    Console.WriteLine("{0}: {1}", eventName, string.Join(", ", args.ToArray()));
                 }
 
-                try
-                {
-                    arg3 = rec[3].ToString();
-                }
-                catch
-                {
-                    arg3 = -5;
-                }
-
-                try
-                {
-                    arg4 = rec[4].ToString();
-                }
-                catch
-                {
-                    arg4 = -5;
-                }
-
-                try
-                {
-                    arg5 = rec[5].ToString();
-                }
-                catch
-                {
-                    arg5 = -5;
-                }
-
-                object[] args = new object[] { arg1, arg2, arg3, arg4, arg5 };
-
-                if(!OakwoodCommandSystem.CallEvent(eventName, args))
+                if(!OakwoodCommandSystem.CallEvent(eventName, args.ToArray()))
                 {
                     Console.WriteLine($"[ERROR] Cannot execute event '{eventName}'!");
                 }
 
                 EventListener.SendData("ok");
             }
+        }
+
+        public static bool KillClient()
+        {
+            Working = false;
+            OakwoodCommandSystem.CallEvent("stop", null);
+            APIThread.Abort();
+            ListenerThread.Abort();
+            EventListener.StopClient();
+            return true;
         }
 
         public static void ThrowFatal(string message)
@@ -295,6 +256,7 @@ namespace Sevenisko.SharpWood
                                     OakMethods.Add(method.Replace("oak_", ""));
                                 }
 
+                                OakwoodCommandSystem.RegisterEvent("shConBreak", OakwoodEvents.OnConBreak);
                                 OakwoodCommandSystem.RegisterEvent("playerConnect", OakwoodEvents.OnConnect);
                                 OakwoodCommandSystem.RegisterEvent("playerDisconnect", OakwoodEvents.OnDisconnect);
                                 OakwoodCommandSystem.RegisterEvent("playerDeath", OakwoodEvents.OnPKill);
