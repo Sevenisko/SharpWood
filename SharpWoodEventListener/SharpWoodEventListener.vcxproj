@@ -21,8 +21,9 @@
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <ProjectGuid>{A54ABD96-E31B-4636-8389-3AFA10110C06}</ProjectGuid>
-    <RootNamespace>SharpWoodEventListener</RootNamespace>
+    <RootNamespace>SharpWoodClient</RootNamespace>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <ProjectName>SharpWoodClient</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -70,15 +71,15 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <TargetName>EventListener</TargetName>
+    <TargetName>SharpWoodCore</TargetName>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;.\lib</LibraryPath>
-    <OutDir>F:\DEV\CSharp\SharpWoodTest\bin\x64\Debug</OutDir>
+    <OutDir>..\SharpWoodTest\bin\x64\Debug</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;.\lib</LibraryPath>
     <TargetExt>.dll</TargetExt>
-    <TargetName>EventListener</TargetName>
-    <OutDir>F:\DEV\CSharp\SharpWoodTest\bin\x64\Release</OutDir>
+    <TargetName>SharpWoodCore</TargetName>
+    <OutDir>..\SharpWoodTest\bin\x64\Release</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
