@@ -12,15 +12,36 @@ namespace Sevenisko.SharpWood
         internal WLine WriteLine;
     }
 
-    public class EventListener
+    public struct Ret
     {
-        [DllImport("EventListener.dll", EntryPoint = "StartClient")]
+        public IntPtr buffer;
+        public int length;
+    };
+
+    public class FuncListener
+    {
+        [DllImport("SharpWoodCore.dll", EntryPoint = "StartFuncClient")]
         internal static extern void StartClient(string url, NanoFunctions functions);
 
-        [DllImport("EventListener.dll", EntryPoint = "SendData")]
+        [DllImport("SharpWoodCore.dll", EntryPoint = "RecvFuncData")]
+        internal static extern Ret ReceiveData();
+
+        [DllImport("SharpWoodCore.dll", EntryPoint = "SendFuncData")]
+        internal static extern void SendFuncData(IntPtr data);
+
+        [DllImport("SharpWoodCore.dll", EntryPoint = "StopFuncClient")]
+        internal static extern void StopClient();
+    }
+
+    public class EventListener
+    {
+        [DllImport("SharpWoodCore.dll", EntryPoint = "StartEventClient")]
+        internal static extern void StartClient(string url, NanoFunctions functions);
+
+        [DllImport("SharpWoodCore.dll", EntryPoint = "SendEventData")]
         internal static extern void SendData(string data);
 
-        [DllImport("EventListener.dll", EntryPoint = "StopClient")]
+        [DllImport("SharpWoodCore.dll", EntryPoint = "StopEventClient")]
         internal static extern int StopClient();
     }
 

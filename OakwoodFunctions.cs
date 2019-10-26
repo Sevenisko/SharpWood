@@ -48,9 +48,9 @@ namespace Sevenisko.SharpWood
             }
         }
 
-        public static bool Spawn(OakwoodPlayer player, OakVec3 pos)
+        public static bool Spawn(OakwoodPlayer player, OakVec3 pos, float angle)
         {
-            object[] response = Oakwood.CallFunction("oak_player_spawn", new object[] { player.ID, new float[] { pos.x, pos.y, pos.z }, 0.0f });
+            object[] response = Oakwood.CallFunction("oak_player_spawn", new object[] { player.ID, new float[] { pos.x, pos.y, pos.z }, angle });
 
             int ret = int.Parse(response[0].ToString());
             
@@ -161,7 +161,7 @@ namespace Sevenisko.SharpWood
 
         public static bool SetPosition(OakwoodPlayer player, OakVec3 position)
         {
-            object[] response = Oakwood.CallFunction("oak_player_position_set", new object[] { player.ID, position });
+            object[] response = Oakwood.CallFunction("oak_player_position_set", new object[] { player.ID, new float[] { position.x, position.y, position.z } });
 
             int ret = int.Parse(response[0].ToString());
 
@@ -175,7 +175,7 @@ namespace Sevenisko.SharpWood
 
         public static bool SetDirection(OakwoodPlayer player, OakVec3 direction)
         {
-            object[] response = Oakwood.CallFunction("oak_player_direction_set", new object[] { player.ID, direction });
+            object[] response = Oakwood.CallFunction("oak_player_direction_set", new object[] { player.ID, new float[] { direction.x, direction.y, direction.z } });
 
             int ret = int.Parse(response[0].ToString());
 
@@ -230,7 +230,12 @@ namespace Sevenisko.SharpWood
 
         public static OakVec3 GetDirection(OakwoodPlayer player)
         {
-            object[] dir = (object[])Oakwood.CallFunction("oak_player_direction_get", new object[] { player.ID })[1];
+            object[] dir = (object[])Oakwood.CallFunctionArray("oak_player_direction_get", new object[] { player.ID })[1];
+
+            if(dir == null)
+            {
+                return new OakVec3(0, 0, 0);
+            }
 
             return new OakVec3(float.Parse(dir[0].ToString()), float.Parse(dir[1].ToString()), float.Parse(dir[2].ToString()));
         }
@@ -264,15 +269,34 @@ namespace Sevenisko.SharpWood
 
         public static OakwoodVehicle Spawn(OakwoodVehicleModel model, OakVec3 position, float angle)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_spawn", new object[] { model.Modelname + "\0", model.Modelname.Length + 1, new float[] { position.x, position.y, position.z }, angle })[0].ToString());
+            object[] r = Oakwood.CallFunction("oak_vehicle_spawn", new object[] { model.Modelname + "\0", model.Modelname.Length + 1, new float[] { position.x, position.y, position.z }, angle });
 
-            if (ret == -1)
+            int vehID = -1;
+
+            int ret = int.Parse(r[0].ToString());
+
+            try
+            {
+                vehID = int.Parse(r[1].ToString());
+            }
+            catch
+            {
+                vehID = -1;
+            }
+
+            if(vehID == -1)
             {
                 return null;
             }
 
+            if (ret == -1)
+            {
+                Oakwood.CallFunction("oak_vehicle_despawn", new object[] { vehID });
+                return null;
+            }
+
             OakwoodVehicle newVeh = new OakwoodVehicle();
-            newVeh.ID = ret;
+            newVeh.ID = vehID;
             newVeh.Model = model.Modelname;
 
             Oakwood.Vehicles.Add(newVeh);
@@ -399,28 +423,26 @@ namespace Sevenisko.SharpWood
 
         public static OakVec3 GetPosition(OakwoodVehicle vehicle)
         {
-            string posStr = Oakwood.CallFunction("oak_vehicle_position_get", new object[] { vehicle.ID })[1].ToString();
-            Console.WriteLine(posStr);
-            string[] p = posStr.Split(',');
+            object[] pos = (object[])Oakwood.CallFunctionArray("oak_vehicle_position_get", new object[] { vehicle.ID })[1];
 
-            float posX = float.Parse(p[0]);
-            float posY = float.Parse(p[1]);
-            float posZ = float.Parse(p[2]);
+            if (pos == null)
+            {
+                return new OakVec3(0, 0, 0);
+            }
 
-            return new OakVec3(posX, posY, posZ);
+            return new OakVec3(float.Parse(pos[0].ToString()), float.Parse(pos[1].ToString()), float.Parse(pos[2].ToString()));
         }
 
         public static OakVec3 GetDirection(OakwoodVehicle vehicle)
         {
-            string dirStr = Oakwood.CallFunction("oak_vehicle_direction_get", new object[] { vehicle.ID })[1].ToString();
-            Console.WriteLine(dirStr);
-            string[] p = dirStr.Split(',');
+            object[] dir = (object[])Oakwood.CallFunctionArray("oak_vehicle_direction_get", new object[] { vehicle.ID })[1];
 
-            float dirX = float.Parse(p[0]);
-            float dirY = float.Parse(p[1]);
-            float dirZ = float.Parse(p[2]);
+            if (dir == null)
+            {
+                return new OakVec3(0, 0, 0);
+            }
 
-            return new OakVec3(dirX, dirY, dirZ);
+            return new OakVec3(float.Parse(dir[0].ToString()), float.Parse(dir[1].ToString()), float.Parse(dir[2].ToString()));
         }
 
         public static float GetHeading(OakwoodVehicle vehicle)
@@ -479,11 +501,9 @@ namespace Sevenisko.SharpWood
             return true;
         }
 
-        public static bool Countdown(OakwoodPlayer player, int countdown, int duration, Color color)
+        public static bool Countdown(OakwoodPlayer player, int countdown, int duration, int color)
         {
-            int cl = int.Parse(color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2"));
-
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_countdown", new object[] { player.ID, countdown, duration, cl })[0].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_hud_countdown", new object[] { player.ID, countdown, duration, color })[0].ToString());
 
             if (ret == 0)
             {
@@ -505,11 +525,9 @@ namespace Sevenisko.SharpWood
             return true;
         }
 
-        public static bool Message(OakwoodPlayer player, string text, Color color)
+        public static bool Message(OakwoodPlayer player, string text, int color)
         {
-            int cl = int.Parse(color.R.ToString("X2") + color.G.ToString("X2") + color.B.ToString("X2"));
-
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_message", new object[] { player.ID, text + "\0", text.Length + 1, cl })[0].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_hud_message", new object[] { player.ID, text + "\0", text.Length + 1, color })[0].ToString());
 
             if (ret == 0)
             {
@@ -591,7 +609,7 @@ namespace Sevenisko.SharpWood
     {
         public static bool Send(OakwoodPlayer player, string message)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_chat_send", new object[] { player.ID, message + "\0", message.Length })[0].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_chat_send", new object[] { player.ID, message + "\0", message.Length + 1 })[0].ToString());
 
             if (ret == 0)
             {
@@ -603,7 +621,7 @@ namespace Sevenisko.SharpWood
 
         public static bool SendAll(string message)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_chat_broadcast", new object[] { message + "\0", message.Length })[0].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_chat_broadcast", new object[] { message + "\0", message.Length + 1 })[0].ToString());
 
             if (ret == 0)
             {
@@ -642,16 +660,35 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        public static bool Inside(OakwoodPlayer player)
+        public static OakwoodVehicle Inside(OakwoodPlayer player)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_inside", new object[] { player.ID })[1].ToString());
+            object[] ret = Oakwood.CallFunction("oak_vehicle_player_inside", new object[] { player.ID });
 
-            if (ret == 0)
+            int vehID = -69;
+
+            int retCode = int.Parse(ret[0].ToString());
+            
+            try
             {
-                return true;
+                vehID = int.Parse(ret[1].ToString());
+            }
+            catch
+            {
+                vehID = -64;
             }
 
-            return false;
+            if (retCode == 0)
+            {
+                foreach(OakwoodVehicle veh in Oakwood.Vehicles)
+                {
+                    if(veh.ID == vehID)
+                    {
+                        return veh;
+                    }
+                }
+            }
+
+            return null;
         }
 
         public static VehicleSeat GetSeat(OakwoodVehicle vehicle, OakwoodPlayer player)

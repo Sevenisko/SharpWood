@@ -19,7 +19,6 @@ namespace Sevenisko.SharpWood
             if(!HasCommand(command))
             {
                 cmdRepository[command] = new OakCommandCallback(callback);
-                Console.WriteLine($"[INFO] Registered command `{command}`.");
             }
             else
             {
@@ -32,12 +31,21 @@ namespace Sevenisko.SharpWood
             if(!HasEvent(eventName))
             {
                 eventRepository[eventName] = callback;
-                Console.WriteLine($"[INFO] Registered event `{eventName}`.");
             }
             else
             {
                 Console.WriteLine($"[WARN] Event `{eventName}` is already registered.");
             }
+        }
+
+        public static int GetCommandCount()
+        {
+            return cmdRepository.Count;
+        }
+
+        public static int GetEventCount()
+        {
+            return eventRepository.Count;
         }
 
         public static bool HasCommand(string command)
