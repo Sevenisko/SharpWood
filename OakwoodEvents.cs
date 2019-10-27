@@ -119,18 +119,31 @@ namespace Sevenisko.SharpWood
         {
             string msg = (string)args[0];
 
-            switch(msg)
+            if(msg.StartsWith("!"))
             {
-                case "shwood":
-                    {
-                        OakMisc.Log($"This server is using SharpWood {Oakwood.GetVersion()} made by Sevenisko.");
-                    }
-                    break;
+                OakChat.SendAll($"[CHAT] Server: {msg.Substring(1)}");
+                OakMisc.Log($"[CHAT] Server: {msg.Substring(1)}");
             }
-
-            if(OnConsoleText != null)
+            else
             {
-                OnConsoleText(msg);
+                switch (msg)
+                {
+                    case "shwood":
+                        {
+                            OakMisc.Log($"This server is using SharpWood {Oakwood.GetVersion()} made by Sevenisko.");
+                        }
+                        break;
+                    case "shwood-throwfatal":
+                        {
+                            Oakwood.ThrowFatal("User-called");
+                        }
+                        break;
+                }
+
+                if (OnConsoleText != null)
+                {
+                    OnConsoleText(msg);
+                }
             }
 
             return true;
