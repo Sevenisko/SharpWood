@@ -5,11 +5,13 @@ namespace Sevenisko.SharpWood
 {
     internal delegate void DReceive(IntPtr buffer, int length);
     internal delegate void WLine(string buffer);
+    internal delegate void UThread();
 
     public struct NanoFunctions
     {
         internal DReceive Receive;
         internal WLine WriteLine;
+        internal UThread UpdateEvents;
     }
 
     public struct Ret
@@ -18,6 +20,20 @@ namespace Sevenisko.SharpWood
         public int length;
     };
 
+    public enum OakColor
+    {
+        White = 0xFFFFFF,
+        Red = 0xFF0000,
+        Blue = 0x0000FF,
+        Black = 0x000000,
+        Green = 0x00FF00,
+        Yellow = 0xFFFF00,
+        Aqua = 0x00FFFF,
+        LightGray = 0xADADAD,
+        Gray = 0x707070,
+        DarkGray = 0x363636
+    };
+    
     public class FuncListener
     {
         [DllImport("SharpWoodCore.dll", EntryPoint = "StartFuncClient")]
