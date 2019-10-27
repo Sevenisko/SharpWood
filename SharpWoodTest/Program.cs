@@ -2,11 +2,21 @@
 using Sevenisko.SharpWood;
 using System.IO;
 using System.Linq;
+using System.Timers;
+using System.Collections.Generic;
 
 namespace Sevenisko.SharpWoodTestGamemode
 {
     class SWTestGamemode
     {
+        public static void Repeat(int count, Action action)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                action();
+            }
+        }
+
         #region Initialization entry
         static void Main(string[] args)
         {
@@ -19,7 +29,7 @@ namespace Sevenisko.SharpWoodTestGamemode
             OakwoodEvents.OnPlayerKeyDown += OnPlayerKey;
             OakwoodEvents.OnConsoleBreak += OnConsoleBreak;
 
-            Oakwood.CreateClient("ipc://oakwood-inbound", "ipc://oakwood-outbound");
+            Oakwood.CreateClient("ipc://oakwood-inbound", "ipc://oakwood-outbound", true);
 
             OakwoodCommandSystem.RegisterCommand("test", TestCommand);
             OakwoodCommandSystem.RegisterCommand("players", ShowPlayersCommand);
@@ -37,6 +47,10 @@ namespace Sevenisko.SharpWoodTestGamemode
             OakwoodCommandSystem.RegisterCommand("delcar", DelCarCommand);
             OakwoodCommandSystem.RegisterCommand("repair", RepairCommand);
             OakwoodCommandSystem.RegisterCommand("heal", HealCommand);
+            OakwoodCommandSystem.RegisterCommand("warp", Warp);
+            OakwoodCommandSystem.RegisterCommand("createwarp", CreateWarp);
+            OakwoodCommandSystem.RegisterCommand("updatewarp", EditWarp);
+            OakwoodCommandSystem.RegisterCommand("deletewarp", DeleteWarp);
 
             OakwoodCommandSystem.RegisterEvent("unknownCommand", PlUnknownCmd);
         }
@@ -68,11 +82,14 @@ namespace Sevenisko.SharpWoodTestGamemode
         {
             if (OakPlayer.IsValid(player))
             {
-                OakChat.SendAll($"[INFO] {player.Name} joined the game.");
-
-                OakPlayer.Spawn(player, new OakVec3(-2136.182f, -5.768807f, -521.3138f), 90.0f);
+                foreach (OakwoodPlayer p in OakPlayer.GetList())
+                {
+                    OakHUD.Message(p, $"{player.Name} joined the game.", OakColor.White);
+                }
 
                 OakPlayer.SpawnTempWeapons(player);
+
+                OakPlayer.Spawn(player, new OakVec3(-2136.182f, -5.768807f, -521.3138f), 90.0f);
 
                 player.TpaID = -1;
 
@@ -84,7 +101,10 @@ namespace Sevenisko.SharpWoodTestGamemode
         {
             if (OakPlayer.IsValid(player))
             {
-                OakChat.SendAll($"[INFO] {player.Name} left the game.");
+                foreach(OakwoodPlayer p in OakPlayer.GetList())
+                {
+                    OakHUD.Message(p, $"{player.Name} left the game.", OakColor.White);
+                }
             }
         }
 
@@ -101,14 +121,45 @@ namespace Sevenisko.SharpWoodTestGamemode
         {
             if(OakPlayer.IsValid(player))
             {
-                OakChat.SendAll($"[INFO] {player.Name} died.");
-                OakPlayer.SpawnTempWeapons(player);
+                foreach(OakwoodPlayer p in OakPlayer.GetList())
+                {
+                    OakHUD.Message(p, $"{player.Name} died.", OakColor.White);
+                }
 
-                OakPlayer.SetHealth(player, 200.0f);
-                OakPlayer.Spawn(player, new OakVec3(-759.3801f, 13.24883f, 761.6967f), 180.0f);
+                OakHUD.Announce(player, "Wasted", 4.85f);
+                
+                Timer spawnTimer = new Timer();
+                spawnTimer.Interval = 5000;
+                spawnTimer.AutoReset = false;
+                spawnTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
+                {
+                    Timer waitTimer = new Timer();
+                    OakHUD.Fade(player, OakwoodFade.FadeIn, 2500, OakColor.Black);
+                    waitTimer.Interval = 2500;
+                    waitTimer.AutoReset = false;
+                    waitTimer.Elapsed += (object snd, ElapsedEventArgs ea) =>
+                    {
+                        OakPlayer.SpawnTempWeapons(player);
+                        OakPlayer.SetHealth(player, 200.0f);
+                        OakPlayer.Spawn(player, new OakVec3(-759.3801f, 13.24883f, 761.6967f), 180.0f);
+                        OakHUD.Fade(player, OakwoodFade.FadeOut, 2500, OakColor.Black);
+                        /*Timer protTimer = new Timer();
+                        System.Threading.Thread godThread = new System.Threading.Thread(() => Repeat(6500, () => OakPlayer.SetHealth(player, 200.0f)));
+                        protTimer.Interval = 6500;
+                        protTimer.AutoReset = false;
+                        protTimer.Elapsed += (object a, ElapsedEventArgs b) =>
+                        {
+                            OakHUD.Message(player, "Spawn protection is now disabled.", OakColor.White);
+                            godThread.Abort();
+                        };
+                        
+                        godThread.Start();
+                        protTimer.Start();*/
+                    };
+                    waitTimer.Start();
+                };
 
-                OakHUD.Fade(player, OakwoodFade.FadeIn, 500, 0xFFFFFF);
-                OakHUD.Fade(player, OakwoodFade.FadeOut, 500, 0xFFFFFF);
+                spawnTimer.Start();
             }
         }
 
@@ -130,6 +181,149 @@ namespace Sevenisko.SharpWoodTestGamemode
         #endregion
 
         #region Commands
+        static bool Warp(OakwoodPlayer player, object[] args)
+        {
+            if (args.Length == 0)
+            {
+                string List = "";
+
+                foreach(string f in Directory.GetFiles(Environment.CurrentDirectory + @"\Warps"))
+                {
+                    List += $"{Path.GetFileNameWithoutExtension(f)}, ";
+                }
+
+                OakChat.Send(player, $"[WARPS ({Directory.GetFiles(Environment.CurrentDirectory + @"\Warps").Length})] {List}");
+                return true;
+            }
+
+            string locName = args[0].ToString();
+
+            string file = Environment.CurrentDirectory + @"\Warps\" + $"{locName}.txt";
+
+            if (File.Exists(file))
+            {
+                OakHUD.Message(player, $"Warping you to '{locName}'...", 0xFFFFFF);
+                string[] pos = File.ReadAllText(file).Split(';');
+                OakVec3 newPos = new OakVec3(float.Parse(pos[0]), float.Parse(pos[1]), float.Parse(pos[2]));
+                OakVec3 newDir = new OakVec3(float.Parse(pos[3]), float.Parse(pos[4]), float.Parse(pos[5]));
+                OakPlayer.SetPosition(player, newPos);
+                OakPlayer.SetDirection(player, newDir);
+            }
+            else
+            {
+                OakHUD.Message(player, $"Warp '{locName}' doesn't exist!", 0xFF0000);
+            }
+
+            return true;
+        }
+
+        static bool DeleteWarp(OakwoodPlayer player, object[] args)
+        {
+            if (args.Length == 0)
+            {
+                OakChat.Send(player, "[USAGE] /deletewarp <locName>");
+                return true;
+            }
+
+            string locName = args[0].ToString();
+
+            string file = Environment.CurrentDirectory + @"\Warps\" + $"{locName}.txt";
+
+            if(File.Exists(file))
+            {
+                File.Delete(file);
+                OakHUD.Message(player, $"Warp '{locName}' deleted.", OakColor.White);
+            }
+            else
+            {
+                OakHUD.Message(player, $"Warp '{locName}' doesn't exist!", OakColor.Red);
+            }
+
+            return true;
+        }
+
+        static bool EditWarp(OakwoodPlayer player, object[] args)
+        {
+            if (args.Length == 0)
+            {
+                OakChat.Send(player, "[USAGE] /updatewarp <locName>");
+                return true;
+            }
+
+            string locName = args[0].ToString();
+
+            string file = Environment.CurrentDirectory + @"\Warps\" + $"{locName}.txt";
+
+            if (!Directory.Exists(Path.GetDirectoryName(file)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(file));
+            }
+
+            if(File.Exists(file))
+            {
+                OakVec3 playerPos = OakPlayer.GetPosition(player);
+                OakVec3 playerDir = OakPlayer.GetDirection(player);
+
+                if (playerPos.x != 0 && playerPos.y != 0 && playerPos.z != 0 && playerDir.x != 0 && playerDir.z != 0)
+                {
+                    File.WriteAllText(file, $"{playerPos.x};{playerPos.y};{playerPos.z};{playerDir.x};{playerDir.y};{playerDir.z}");
+
+                    OakHUD.Message(player, $"Warp '{locName}' updated!", 0xFFFFFF);
+                }
+                else
+                {
+                    OakHUD.Message(player, "Cannot create warp!", 0xFF0000);
+                }
+            }
+            else
+            {
+                OakHUD.Message(player, $"Warp '{locName}' doesn't exist!", OakColor.Red);
+            }
+
+            return true;
+        }
+
+        static bool CreateWarp(OakwoodPlayer player, object[] args)
+        {
+            if (args.Length == 0)
+            {
+                OakChat.Send(player, "[USAGE] /createwarp <locName>");
+                return true;
+            }
+
+            string locName = args[0].ToString();
+
+            string file = Environment.CurrentDirectory + @"\Warps\" + $"{locName}.txt";
+
+            if (!Directory.Exists(Path.GetDirectoryName(file)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(file));
+            }
+
+            if (!File.Exists(file))
+            {
+                OakVec3 playerPos = OakPlayer.GetPosition(player);
+                OakVec3 playerDir = OakPlayer.GetDirection(player);
+
+                if (playerPos.x != 0 && playerPos.y != 0 && playerPos.z != 0 && playerDir.x != 0 && playerDir.z != 0)
+                {
+                    File.WriteAllText(file, $"{playerPos.x};{playerPos.y};{playerPos.z};{playerDir.x};{playerDir.y};{playerDir.z}");
+
+                    OakHUD.Message(player, $"Warp '{locName}' created!", 0xFFFFFF);
+                }
+                else
+                {
+                    OakHUD.Message(player, "Cannot create warp!", 0xFF0000);
+                }
+            }
+            else
+            {
+                OakHUD.Message(player, $"Warp '{locName}' already exists!", OakColor.Red);
+            }
+
+            return true;
+        }
+
         static bool ClearChatCommand(OakwoodPlayer player, object[] args)
         {
             for(int x = 0; x < 24; x++)
@@ -332,14 +526,14 @@ namespace Sevenisko.SharpWoodTestGamemode
         static bool GetPos(OakwoodPlayer player, object[] args)
         {
             OakVec3 pos = OakPlayer.GetPosition(player);
-            OakHUD.Message(player, $"Actual position: [{pos.x}, {pos.y}, {pos.z}]", 0xFFFFFF);
+            OakHUD.Message(player, $"Actual position: [{pos.x}; {pos.y}; {pos.z}]", 0xFFFFFF);
             return true;
         }
         
         static bool GetDir(OakwoodPlayer player, object[] args)
         {
             OakVec3 dir = OakPlayer.GetDirection(player);
-            OakHUD.Message(player, $"Actual direction: [{dir.x}, {dir.y}, {dir.z}]", 0xFFFFFF);
+            OakHUD.Message(player, $"Actual direction: [{dir.x * 360.0f}; {dir.y * 360.0f}; {dir.z * 360.0f}]", 0xFFFFFF);
             return true;
         }
 
