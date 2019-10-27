@@ -48,25 +48,62 @@ namespace Sevenisko.SharpWood
 
         private static string UniqueID;
 
+        private static int apiThreadTimeout = 0;
+        private static int eventThreadTimeout = 0;
+
         public delegate bool HandlerRoutine(CtrlType CtrlType);
 
         [DllImport("Kernel32")]
         public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
 
+        [DllImport("Kernel32")]
+        static extern bool SetConsoleTitle(string lpConsoleTitle);
+
         public static bool Working { get; private set; } = false;
+
+        private static bool CanRestart = false;
 
         static Thread APIThread;
         static Thread ListenerThread;
+        static Thread WatchdogThread;
 
         static Assembly currentAssembly;
         static FileVersionInfo ver;
 
         static RequestSocket reqSocket;
 
+        private static void WatchDog()
+        {
+            while(true)
+            {
+                if(Working)
+                {
+                    float apiPing = 350000.0f - (350000.0f - apiThreadTimeout);
+                    float eventPing = 350000.0f - (350000.0f - eventThreadTimeout);
+
+                    SetConsoleTitle($"SharpWood Development Console | API response: [{apiPing}/{eventPing}ms]");
+
+                    if (apiThreadTimeout > 350000)
+                        ThrowFatal("API Thread has stopped responding!");
+
+                    if (eventThreadTimeout > 350000)
+                        ThrowFatal("Event Thread has stopped responding!");
+
+                    apiThreadTimeout++;
+                    eventThreadTimeout++;
+                }
+            }
+        }
+
         private static bool ConsoleCtrlCheck(CtrlType ctrlType)
         {
             OakwoodCommandSystem.CallEvent("shConBreak", new object[] { ctrlType });
             return true;
+        }
+
+        internal static void UpdateEvents()
+        {
+            eventThreadTimeout = 0;
         }
 
         internal static object[] CallFunction(string functionName, params object[] args)
@@ -146,7 +183,39 @@ namespace Sevenisko.SharpWood
                 res = (MPackArray)MPack.ParseFromBytes(d);
 
                 statuscode = int.Parse(res[0].Value.ToString());
-                result = new object[] { res[1][0].Value, res[1][1].Value, res[1][2].Value };
+
+                object val1 = null;
+                object val2 = null;
+                object val3 = null;
+
+                try
+                {
+                    val1 = res[1][0].Value;
+                }
+                catch
+                {
+                    val1 = null;
+                }
+
+                try
+                {
+                    val2 = res[1][1].Value;
+                }
+                catch
+                {
+                    val2 = null;
+                }
+
+                try
+                {
+                    val3 = res[1][2].Value;
+                }
+                catch
+                {
+                    val3 = null;
+                }
+
+                result = new object[] { val1, val2, val3 };
 
                 if (res[1].ToString().Contains("Error"))
                 {
@@ -209,6 +278,15 @@ namespace Sevenisko.SharpWood
 
         public static void ThrowFatal(string message)
         {
+            foreach(OakwoodPlayer player in Oakwood.Players)
+            {
+                OakPlayer.Kick(player, "Gamemode has stopped responding");
+            }
+
+            SetConsoleTitle("SharpWood Development Console | Stopped working!");
+
+            OakMisc.Log("[ERROR] SharpWood has stopped working!");
+
             APIThread.Abort();
             EventListener.StopClient();
             ListenerThread.Abort();
@@ -217,8 +295,48 @@ namespace Sevenisko.SharpWood
             Console.WriteLine("========[FATAL ERROR]========");
             Console.WriteLine(message);
             Console.WriteLine("=============================");
-            Console.WriteLine("Enter any key to exit...");
-            Console.ReadKey();
+            if (CanRestart)
+            {
+                Process myProcess = new Process();
+
+                try
+                {
+                    myProcess.StartInfo.UseShellExecute = false;
+                    myProcess.StartInfo.FileName = Assembly.GetEntryAssembly().Location;
+                    myProcess.StartInfo.CreateNoWindow = false;
+
+                    Console.WriteLine("Restarting in 3 seconds...");
+
+                    System.Timers.Timer resetTimer = new System.Timers.Timer();
+                    resetTimer.Interval = 3000;
+                    resetTimer.AutoReset = false;
+                    resetTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
+                    {
+                        Console.Clear();
+
+                        myProcess.Start();
+
+                        Environment.Exit(1);
+                    };
+
+                    resetTimer.Start();
+
+                    while(true)
+                    {
+                        // Do nothing
+                    }
+                }
+                catch
+                {
+                    CanRestart = false;
+                    ThrowFatal("Cannot execute restart process!");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Enter any key to exit...");
+                Console.ReadKey();
+            }
             Environment.Exit(1);
         }
 
@@ -231,6 +349,8 @@ namespace Sevenisko.SharpWood
 
             while (true)
             {
+                apiThreadTimeout = 0;
+
                 if (update > heartbeat)
                 {
                     object uido = CallFunction("oak__heartbeat", null)[1];
@@ -287,10 +407,12 @@ namespace Sevenisko.SharpWood
             Console.WriteLine(msg);
         }
 
-        public static void CreateClient(string inbound, string outbound)
+        public static void CreateClient(string inbound, string outbound, bool autoRestart)
         {
             string inboundAddr = "ipc://oakwood-inbound";
             string outboundAddr = "ipc://oakwood-outbound";
+
+            CanRestart = autoRestart;
 
             if (inbound != null)
                 inboundAddr = inbound;
@@ -300,7 +422,7 @@ namespace Sevenisko.SharpWood
 
             SetConsoleCtrlHandler(new HandlerRoutine(ConsoleCtrlCheck), true);
 
-            Console.Title = "SharpWood Development Console";
+            SetConsoleTitle("SharpWood Development Console");
 
             Console.WriteLine("============================");
             Console.WriteLine($"    SharpWood {GetVersion()}    ");
@@ -309,12 +431,18 @@ namespace Sevenisko.SharpWood
 
             reqSocket = new RequestSocket();
 
+            if(CanRestart)
+            {
+                Console.WriteLine("Auto-Restart on fatalError enabled.");
+            }
+
             Console.WriteLine($"Connecting inbound to '{inboundAddr}'");
             Console.WriteLine($"Connecting outbound to '{outboundAddr}'");
 
             NanoFunctions functions = new NanoFunctions();
             functions.Receive = ReceiveRespondentMessage;
             functions.WriteLine = WriteConLine;
+            functions.UpdateEvents = UpdateEvents;
 
             ListenerThread = new Thread(() => EventListener.StartClient(inboundAddr, functions));
             reqSocket.Connect(outboundAddr);
@@ -323,7 +451,11 @@ namespace Sevenisko.SharpWood
 
             APIThread = new Thread(new ThreadStart(UpdateClient));
 
+            WatchdogThread = new Thread(new ThreadStart(WatchDog));
+
             APIThread.Start();
+
+            WatchdogThread.Start();
         }
 
         public static string GetVersion()
