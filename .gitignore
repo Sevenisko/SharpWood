@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+# Un-ignore EVERYTHING in lib/ and packages/
+!lib/*
+!packages/*
+
 # User-specific files
 *.suo
 *.user
