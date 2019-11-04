@@ -4,7 +4,8 @@
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
 # Un-ignore EVERYTHING in lib/
-!lib/
+!lib/x64/
+!lib/x86/
 
 # User-specific files
 *.suo
