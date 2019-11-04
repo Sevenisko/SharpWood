@@ -22,16 +22,19 @@ namespace Sevenisko.SharpWood
         public float Health;
         public int TpaID;
         public float Heading;
+        public OakwoodVehicle Vehicle;
     }
 
     public class OakwoodVehicle
     {
         public int ID;
         public string Model;
+        public string Name;
     }
 
     public enum CtrlType
     {
+        None = -1,
         CtrlC = 0,
         CtrlBreak,
         CtrlClose,
@@ -41,6 +44,11 @@ namespace Sevenisko.SharpWood
 
     public class Oakwood
     {
+        [DllImport("Kernel32")]
+        public static extern bool SetConsoleCtrlHandler(EventHandler Handler, bool Add);
+
+        public delegate bool EventHandler(CtrlType sig);
+
         public static List<string> OakMethods = new List<string>();
 
         internal static List<OakwoodPlayer> Players = new List<OakwoodPlayer>();
@@ -50,11 +58,6 @@ namespace Sevenisko.SharpWood
 
         private static int apiThreadTimeout = 0;
         private static int eventThreadTimeout = 0;
-
-        public delegate bool HandlerRoutine(CtrlType CtrlType);
-
-        [DllImport("Kernel32")]
-        public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
 
         [DllImport("Kernel32")]
         static extern bool SetConsoleTitle(string lpConsoleTitle);
@@ -72,33 +75,48 @@ namespace Sevenisko.SharpWood
 
         static RequestSocket reqSocket;
 
-        private static void WatchDog()
+        internal static void ThrowRuntimeError(string msg)
         {
-            while(true)
-            {
-                if(Working)
-                {
-                    float apiPing = 350000.0f - (350000.0f - apiThreadTimeout);
-                    float eventPing = 350000.0f - (350000.0f - eventThreadTimeout);
-
-                    SetConsoleTitle($"SharpWood Development Console | API response: [{apiPing}/{eventPing}ms]");
-
-                    if (apiThreadTimeout > 350000)
-                        ThrowFatal("API Thread has stopped responding!");
-
-                    if (eventThreadTimeout > 350000)
-                        ThrowFatal("Event Thread has stopped responding!");
-
-                    apiThreadTimeout++;
-                    eventThreadTimeout++;
-                }
-            }
+            Console.WriteLine($"[ERROR] Runtime error: {msg}");
         }
 
-        private static bool ConsoleCtrlCheck(CtrlType ctrlType)
+        private static void WatchDog()
         {
-            OakwoodCommandSystem.CallEvent("shConBreak", new object[] { ctrlType });
-            return true;
+            System.Timers.Timer updateTimer = new System.Timers.Timer();
+            updateTimer.Interval = 1000;
+            updateTimer.AutoReset = true;
+            updateTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
+            {
+                apiThreadTimeout++;
+                eventThreadTimeout++;
+
+                SetConsoleTitle($"SharpWood Development Console | Responses: [API {apiThreadTimeout}sec, Events {eventThreadTimeout}sec]");
+
+                if (apiThreadTimeout > 30)
+                    ThrowFatal("API Thread has stopped responding!");
+
+                if (eventThreadTimeout > 30)
+                    ThrowFatal("Event Thread has stopped responding!");
+            };
+            updateTimer.Start();
+        }
+
+        public static bool Handler(CtrlType sig)
+        {
+            switch (sig)
+            {
+                case CtrlType.CtrlC:
+                case CtrlType.CtrlLogoff:
+                case CtrlType.CtrlShutdown:
+                case CtrlType.CtrlClose:
+                case CtrlType.CtrlBreak:
+                    {
+                        OakwoodCommandSystem.CallEvent("shConBreak", null);
+                    }
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         internal static void UpdateEvents()
@@ -130,7 +148,7 @@ namespace Sevenisko.SharpWood
 
             MPackArray res;
 
-            int statuscode = -1;
+            int statuscode = -500;
             object result = null;
 
             if(d != null)
@@ -144,10 +162,15 @@ namespace Sevenisko.SharpWood
                 {
                     string error = res[1].ToString().Split(':')[1];
                     result = error;
-                    Console.WriteLine("[ERROR] Runtime error:" + error);
+                    ThrowRuntimeError(error.Substring(1));
                 }
             }
-            
+
+            if(statuscode == -500 && result == null)
+            {
+                ThrowRuntimeError($"Response from '{functionName}' is NULL.");
+            }
+
             return new object[] { statuscode, result };
         }
 
@@ -175,7 +198,7 @@ namespace Sevenisko.SharpWood
 
             MPackArray res;
 
-            int statuscode = -1;
+            int statuscode = -500;
             object[] result = null;
 
             if (d != null)
@@ -221,8 +244,18 @@ namespace Sevenisko.SharpWood
                 {
                     string error = res[1].ToString().Split(':')[1];
                     result[0] = error;
-                    Console.WriteLine("[ERROR] Runtime error:" + error);
+                    ThrowRuntimeError(error.Substring(1));
                 }
+            }
+
+            if(result != null)
+            {
+                Console.WriteLine($"{functionName}: {string.Join(",", result)}");
+            }
+
+            if(statuscode == -500 && result == null)
+            {
+                ThrowRuntimeError($"Response from '{functionName}' is NULL.");   
             }
 
             return new object[] { statuscode, result };
@@ -259,7 +292,7 @@ namespace Sevenisko.SharpWood
 
                 if(!OakwoodCommandSystem.CallEvent(eventName, args.ToArray()))
                 {
-                    Console.WriteLine($"[ERROR] Cannot execute event '{eventName}'!");
+                    Console.WriteLine($"[ERROR] Cannot call event '{eventName}'!");
                 }
 
                 EventListener.SendData("ok");
@@ -272,6 +305,7 @@ namespace Sevenisko.SharpWood
             OakwoodCommandSystem.CallEvent("stop", null);
             APIThread.Abort();
             ListenerThread.Abort();
+            WatchdogThread.Abort();
             EventListener.StopClient();
             return true;
         }
@@ -420,9 +454,8 @@ namespace Sevenisko.SharpWood
             if (outbound != null)
                 outboundAddr = outbound;
 
-            SetConsoleCtrlHandler(new HandlerRoutine(ConsoleCtrlCheck), true);
 
-            SetConsoleTitle("SharpWood Development Console");
+            SetConsoleTitle("SharpWood Development Console | Initializating...");
 
             Console.WriteLine("============================");
             Console.WriteLine($"    SharpWood {GetVersion()}    ");
@@ -447,11 +480,16 @@ namespace Sevenisko.SharpWood
             ListenerThread = new Thread(() => EventListener.StartClient(inboundAddr, functions));
             reqSocket.Connect(outboundAddr);
 
+            ListenerThread.Name = "Event Listener Thread";
+
             ListenerThread.Start();
 
             APIThread = new Thread(new ThreadStart(UpdateClient));
 
             WatchdogThread = new Thread(new ThreadStart(WatchDog));
+
+            APIThread.Name = "Function Call Thread";
+            WatchdogThread.Name = "Watchdog Thread";
 
             APIThread.Start();
 

@@ -44,7 +44,7 @@ namespace Sevenisko.SharpWood
         public delegate void OnPChat(OakwoodPlayer player, string text);
         public static event OnPChat OnPlayerChat;
 
-        public delegate void OnCBreak(CtrlType ctrlType);
+        public delegate void OnCBreak();
         public static event OnCBreak OnConsoleBreak;
 
         internal static bool start(object[] args)
@@ -69,10 +69,9 @@ namespace Sevenisko.SharpWood
 
         internal static bool OnConBreak(object[] args)
         {
-            CtrlType type = (CtrlType)args[0];
             if(OnConsoleBreak != null)
             {
-                OnConsoleBreak(type);
+                OnConsoleBreak();
             }
             return true;
         }
@@ -224,6 +223,15 @@ namespace Sevenisko.SharpWood
                     player = p;
                     break;
                 }
+            }
+
+            if((VehicleEnterState)e == VehicleEnterState.Enter)
+            {
+                player.Vehicle = vehicle;
+            }
+            else
+            {
+                player.Vehicle = null;
             }
 
             if(OnPlayerVehicleUse != null)

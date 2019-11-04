@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using IniParser;
+using IniParser.Model;
 
 namespace Sevenisko.SharpWood
 {
@@ -358,6 +360,7 @@ namespace Sevenisko.SharpWood
             OakwoodVehicle newVeh = new OakwoodVehicle();
             newVeh.ID = vehID;
             newVeh.Model = model.Modelname;
+            newVeh.Name = model.Name;
 
             Oakwood.Vehicles.Add(newVeh);
 
@@ -798,6 +801,8 @@ namespace Sevenisko.SharpWood
                 return true;
             }
 
+            player.Vehicle = vehicle;
+
             return false;
         }
 
@@ -810,12 +815,14 @@ namespace Sevenisko.SharpWood
                 return true;
             }
 
+            player.Vehicle = null;
+
             return false;
         }
 
         public static OakwoodVehicle Inside(OakwoodPlayer player)
         {
-            object[] ret = Oakwood.CallFunction("oak_vehicle_player_inside", new object[] { player.ID });
+            /*object[] ret = Oakwood.CallFunction("oak_vehicle_player_inside", new object[] { player.ID });
 
             int vehID = -69;
 
@@ -839,9 +846,9 @@ namespace Sevenisko.SharpWood
                         return veh;
                     }
                 }
-            }
+            }*/
 
-            return null;
+            return player.Vehicle;
         }
 
         public static VehicleSeat GetSeat(OakwoodVehicle vehicle, OakwoodPlayer player)
@@ -874,6 +881,80 @@ namespace Sevenisko.SharpWood
             }
 
             return null;
+        }
+    }
+    #endregion
+
+    #region Config Functions
+    public class OakConfig
+    {
+        public static IniData Open(string path)
+        {
+            FileIniDataParser parser = new FileIniDataParser();
+            return parser.ReadFile(path);
+        }
+
+        public static bool GetBoolean(IniData data, string section, string key)
+        {
+            string keyStr = data[section][key];
+            try
+            {
+                bool retKey = bool.Parse(keyStr);
+                return retKey;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static int GetInteger(IniData data, string section, string key)
+        {
+            string keyStr = data[section][key];
+            try
+            {
+                int retKey = int.Parse(keyStr);
+                return retKey;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        public static float GetFloat(IniData data, string section, string key)
+        {
+            string keyStr = data[section][key];
+            try
+            {
+                float retKey = float.Parse(keyStr);
+                return retKey;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
+        public static void SetBoolean(IniData data, string section, string key, bool value)
+        {
+            data[section][key] = value.ToString();
+        }
+
+        public static void SetInteger(IniData data, string section, string key, int value)
+        {
+            data[section][key] = value.ToString();
+        }
+
+        public static void SetFloat(IniData data, string section, string key, float value)
+        {
+            data[section][key] = value.ToString();
+        }
+
+        public static void Save(string path, IniData data)
+        {
+            FileIniDataParser parser = new FileIniDataParser();
+            parser.WriteFile(path, data);
         }
     }
     #endregion

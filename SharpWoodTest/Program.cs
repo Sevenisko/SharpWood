@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Timers;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
+using EventHandler = Sevenisko.SharpWood.Oakwood.EventHandler;
 
 namespace Sevenisko.SharpWoodTestGamemode
 {
@@ -17,9 +19,15 @@ namespace Sevenisko.SharpWoodTestGamemode
             }
         }
 
+        static EventHandler _handler;
+
         #region Initialization entry
         static void Main(string[] args)
         {
+            _handler += new EventHandler(Oakwood.Handler);
+
+            Oakwood.SetConsoleCtrlHandler(_handler, true);
+
             OakwoodEvents.OnStart += OnGMStart;
             OakwoodEvents.OnStop += OnGMStop;
             OakwoodEvents.OnPlayerConnect += OnPlayerConnect;
@@ -51,6 +59,8 @@ namespace Sevenisko.SharpWoodTestGamemode
             OakwoodCommandSystem.RegisterCommand("createwarp", CreateWarp);
             OakwoodCommandSystem.RegisterCommand("updatewarp", EditWarp);
             OakwoodCommandSystem.RegisterCommand("deletewarp", DeleteWarp);
+            OakwoodCommandSystem.RegisterCommand("kill", Kill);
+            OakwoodCommandSystem.RegisterCommand("getcar", GetCurrentVehicle);
 
             OakwoodCommandSystem.RegisterEvent("unknownCommand", PlUnknownCmd);
         }
@@ -69,12 +79,11 @@ namespace Sevenisko.SharpWoodTestGamemode
             Console.WriteLine("Gamemode has been stopped.");
         }
 
-        private static void OnConsoleBreak(CtrlType ctrlType)
+        private static void OnConsoleBreak()
         {
             Console.WriteLine("Exiting gamemode...");
             Oakwood.KillClient();
             Console.WriteLine("Have a good day and goodbye. :)");
-            System.Threading.Thread.Sleep(1500);
             Environment.Exit(0);
         }
 
@@ -181,6 +190,27 @@ namespace Sevenisko.SharpWoodTestGamemode
         #endregion
 
         #region Commands
+        static bool GetCurrentVehicle(OakwoodPlayer player, object[] args)
+        {
+            OakwoodVehicle vehicle = OakVehPlayer.Inside(player);
+            if(vehicle != null)
+            {
+                OakHUD.Message(player, $"Vehicle ID: {vehicle.ID}", OakColor.White);
+                OakHUD.Message(player, $"{vehicle.Name}", OakColor.White);
+            }
+            else
+            {
+                OakHUD.Message(player, "You're not inside of any car!", OakColor.White);
+            }
+            return true;
+        }
+
+        static bool Kill(OakwoodPlayer player, object[] args)
+        {
+            OakPlayer.SetPosition(player, new OakVec3(-759.3313f, 91.55915f, 755.7453f));
+            return true;
+        }
+
         static bool Warp(OakwoodPlayer player, object[] args)
         {
             if (args.Length == 0)

@@ -7,6 +7,12 @@ namespace Sevenisko.SharpWood
     internal delegate void WLine(string buffer);
     internal delegate void UThread();
 
+    public struct SQLiteValue
+    {
+        public string Name;
+        public string ValueType;
+    }
+
     public struct NanoFunctions
     {
         internal DReceive Receive;
@@ -471,8 +477,8 @@ namespace Sevenisko.SharpWood
 
     public enum VehicleEnterState
     {
-        Enter = 0,
-        Leave
+        Leave = 0,
+        Enter
     }
 
     public enum OakwoodFade

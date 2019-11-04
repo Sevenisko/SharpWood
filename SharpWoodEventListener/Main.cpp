@@ -12,6 +12,7 @@ typedef struct Functions
 {
 	void (*DataReceived)(char* buffer, int length);
 	void (*WriteLine)(const char* msg);
+	void (*UpdateEvents)();
 } NanoFunctions;
 
 typedef struct Ret
@@ -33,8 +34,9 @@ EXPORT void StartEventClient(const char* url, NanoFunctions functions)
 	functions.WriteLine("[INFO] Started event thread.");
 	while (1)
 	{
+		functions.UpdateEvents();
 		char* buf = NULL;
-		int bytes = nn_recv(recvSocket, &buf, NN_MSG, 0);
+		int bytes = nn_recv(recvSocket, &buf, NN_MSG, NN_DONTWAIT);
 		if (bytes >= 0)
 		{
 			functions.DataReceived(buf, bytes);
