@@ -3,9 +3,8 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
-# Un-ignore EVERYTHING in lib/ and packages/
-!lib/*
-!packages/*
+# Un-ignore EVERYTHING in lib/
+!lib/
 
 # User-specific files
 *.suo
@@ -184,7 +183,7 @@ PublishScripts/
 # NuGet Packages
 *.nupkg
 # The packages folder can be ignored because of Package Restore
-**/[Pp]ackages/*
+#**/[Pp]ackages/*
 # except build/, which is used as an MSBuild target.
 !**/[Pp]ackages/build/
 # Uncomment if necessary however generally it will be regenerated when needed
