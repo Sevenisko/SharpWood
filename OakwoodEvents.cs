@@ -44,7 +44,7 @@ namespace Sevenisko.SharpWood
         public delegate void OnPChat(OakwoodPlayer player, string text);
         public static event OnPChat OnPlayerChat;
 
-        public delegate void OnCBreak();
+        public delegate void OnCBreak(CtrlType type);
         public static event OnCBreak OnConsoleBreak;
 
         internal static bool start(object[] args)
@@ -69,9 +69,10 @@ namespace Sevenisko.SharpWood
 
         internal static bool OnConBreak(object[] args)
         {
+            CtrlType ctrlType = (CtrlType)int.Parse(args[0].ToString());
             if(OnConsoleBreak != null)
             {
-                OnConsoleBreak();
+                OnConsoleBreak(ctrlType);
             }
             return true;
         }

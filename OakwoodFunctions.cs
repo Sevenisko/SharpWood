@@ -798,10 +798,9 @@ namespace Sevenisko.SharpWood
 
             if (ret == 0)
             {
+                player.Vehicle = vehicle;
                 return true;
             }
-
-            player.Vehicle = vehicle;
 
             return false;
         }
@@ -881,80 +880,6 @@ namespace Sevenisko.SharpWood
             }
 
             return null;
-        }
-    }
-    #endregion
-
-    #region Config Functions
-    public class OakConfig
-    {
-        public static IniData Open(string path)
-        {
-            FileIniDataParser parser = new FileIniDataParser();
-            return parser.ReadFile(path);
-        }
-
-        public static bool GetBoolean(IniData data, string section, string key)
-        {
-            string keyStr = data[section][key];
-            try
-            {
-                bool retKey = bool.Parse(keyStr);
-                return retKey;
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public static int GetInteger(IniData data, string section, string key)
-        {
-            string keyStr = data[section][key];
-            try
-            {
-                int retKey = int.Parse(keyStr);
-                return retKey;
-            }
-            catch
-            {
-                return -1;
-            }
-        }
-
-        public static float GetFloat(IniData data, string section, string key)
-        {
-            string keyStr = data[section][key];
-            try
-            {
-                float retKey = float.Parse(keyStr);
-                return retKey;
-            }
-            catch
-            {
-                return -1;
-            }
-        }
-
-        public static void SetBoolean(IniData data, string section, string key, bool value)
-        {
-            data[section][key] = value.ToString();
-        }
-
-        public static void SetInteger(IniData data, string section, string key, int value)
-        {
-            data[section][key] = value.ToString();
-        }
-
-        public static void SetFloat(IniData data, string section, string key, float value)
-        {
-            data[section][key] = value.ToString();
-        }
-
-        public static void Save(string path, IniData data)
-        {
-            FileIniDataParser parser = new FileIniDataParser();
-            parser.WriteFile(path, data);
         }
     }
     #endregion

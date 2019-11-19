@@ -6,11 +6,20 @@ using System.Timers;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using EventHandler = Sevenisko.SharpWood.Oakwood.EventHandler;
+using Timer = System.Timers.Timer;
+using System.Threading;
 
 namespace Sevenisko.SharpWoodTestGamemode
 {
     class SWTestGamemode
     {
+        public static void Loop(Action action)
+        {
+            while(true)
+            {
+                action();
+            }
+        }
         public static void Repeat(int count, Action action)
         {
             for (int i = 0; i < count; i++)
@@ -37,7 +46,9 @@ namespace Sevenisko.SharpWoodTestGamemode
             OakwoodEvents.OnPlayerKeyDown += OnPlayerKey;
             OakwoodEvents.OnConsoleBreak += OnConsoleBreak;
 
-            Oakwood.CreateClient("ipc://oakwood-inbound", "ipc://oakwood-outbound", true);
+            Thread oakwoodThread = new Thread(() => Oakwood.CreateClient("ipc://oakwood-inbound", "ipc://oakwood-outbound", true));
+
+            oakwoodThread.Start();
 
             OakwoodCommandSystem.RegisterCommand("test", TestCommand);
             OakwoodCommandSystem.RegisterCommand("players", ShowPlayersCommand);
@@ -79,7 +90,7 @@ namespace Sevenisko.SharpWoodTestGamemode
             Console.WriteLine("Gamemode has been stopped.");
         }
 
-        private static void OnConsoleBreak()
+        private static void OnConsoleBreak(CtrlType type)
         {
             Console.WriteLine("Exiting gamemode...");
             Oakwood.KillClient();
@@ -152,18 +163,6 @@ namespace Sevenisko.SharpWoodTestGamemode
                         OakPlayer.SetHealth(player, 200.0f);
                         OakPlayer.Spawn(player, new OakVec3(-759.3801f, 13.24883f, 761.6967f), 180.0f);
                         OakHUD.Fade(player, OakwoodFade.FadeOut, 2500, OakColor.Black);
-                        /*Timer protTimer = new Timer();
-                        System.Threading.Thread godThread = new System.Threading.Thread(() => Repeat(6500, () => OakPlayer.SetHealth(player, 200.0f)));
-                        protTimer.Interval = 6500;
-                        protTimer.AutoReset = false;
-                        protTimer.Elapsed += (object a, ElapsedEventArgs b) =>
-                        {
-                            OakHUD.Message(player, "Spawn protection is now disabled.", OakColor.White);
-                            godThread.Abort();
-                        };
-                        
-                        godThread.Start();
-                        protTimer.Start();*/
                     };
                     waitTimer.Start();
                 };
@@ -200,14 +199,22 @@ namespace Sevenisko.SharpWoodTestGamemode
             }
             else
             {
-                OakHUD.Message(player, "You're not inside of any car!", OakColor.White);
+                OakHUD.Message(player, "You're not inside any car!", OakColor.White);
             }
             return true;
         }
 
         static bool Kill(OakwoodPlayer player, object[] args)
         {
-            OakPlayer.SetPosition(player, new OakVec3(-759.3313f, 91.55915f, 755.7453f));
+            foreach(OakwoodPlayer p in OakPlayer.GetList())
+            {
+                OakHUD.Message(p, $"{player.Name} commited suicide.", OakColor.White);
+            }
+            OakHUD.Fade(player, OakwoodFade.FadeIn, 500, OakColor.Red);
+            OakPlayer.SpawnTempWeapons(player);
+            OakPlayer.SetHealth(player, 200.0f);
+            OakPlayer.Spawn(player, new OakVec3(-759.3801f, 13.24883f, 761.6967f), 180.0f);
+            OakHUD.Fade(player, OakwoodFade.FadeOut, 500, OakColor.Red);
             return true;
         }
 
@@ -378,7 +385,7 @@ namespace Sevenisko.SharpWoodTestGamemode
             }
             else
             {
-                OakHUD.Message(player, "You're not in any vehicle!", 0xFF0000);
+                OakHUD.Message(player, "You're not inside any vehicle!", 0xFF0000);
             }
             return true;
         }
@@ -400,7 +407,7 @@ namespace Sevenisko.SharpWoodTestGamemode
             }
             else
             {
-                OakHUD.Message(player, "You're not in any vehicle!", 0xFF0000);
+                OakHUD.Message(player, "You're not inside any vehicle!", 0xFF0000);
             }
             return true;
         }
@@ -547,7 +554,7 @@ namespace Sevenisko.SharpWoodTestGamemode
             }
             else
             {
-                OakHUD.Message(player, "You can't be inside a vehicle!", 0xFF0000);
+                OakHUD.Message(player, "You can't be inside the vehicle!", 0xFF0000);
             }
 
             return true;

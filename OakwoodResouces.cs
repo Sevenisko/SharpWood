@@ -1,71 +1,72 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Sevenisko.SharpWood
 {
-    internal delegate void DReceive(IntPtr buffer, int length);
-    internal delegate void WLine(string buffer);
-    internal delegate void UThread();
-
-    public struct SQLiteValue
+    public class IniFile
     {
-        public string Name;
-        public string ValueType;
+        string Path;
+
+        [DllImport("kernel32", CharSet = CharSet.Unicode)]
+        static extern long WritePrivateProfileString(string Section, string Key, string Value, string FilePath);
+
+        [DllImport("kernel32", CharSet = CharSet.Unicode)]
+        static extern int GetPrivateProfileString(string Section, string Key, string Default, StringBuilder RetVal, int Size, string FilePath);
+
+        public IniFile(string IniPath = null)
+        {
+            Path = new FileInfo(IniPath + ".ini").FullName.ToString();
+        }
+
+        public string Read(string Key, string Section = null)
+        {
+            var RetVal = new StringBuilder(255);
+            GetPrivateProfileString(Section ?? "SWUserConfig", Key, "", RetVal, 255, Path);
+            return RetVal.ToString();
+        }
+
+        public void Write(string Key, string Value, string Section = null)
+        {
+            WritePrivateProfileString(Section ?? "SWUserConfig", Key, Value, Path);
+        }
+
+        public void DeleteKey(string Key, string Section = null)
+        {
+            Write(Key, null, Section ?? "SWUserConfig");
+        }
+
+        public void DeleteSection(string Section = null)
+        {
+            Write(null, null, Section ?? "SWUserConfig");
+        }
+
+        public bool KeyExists(string Key, string Section = null)
+        {
+            return Read(Key, Section ?? "SWUserConfig").Length > 0;
+        }
     }
-
-    public struct NanoFunctions
-    {
-        internal DReceive Receive;
-        internal WLine WriteLine;
-        internal UThread UpdateEvents;
-    }
-
-    public struct Ret
-    {
-        public IntPtr buffer;
-        public int length;
-    };
 
     public enum OakColor
     {
         White = 0xFFFFFF,
         Red = 0xFF0000,
+        DarkRed = 0xAF0000,
         Blue = 0x0000FF,
+        DarkBlue = 0x0000AF,
         Black = 0x000000,
         Green = 0x00FF00,
+        DarkGreen = 0x00AF00,
         Yellow = 0xFFFF00,
+        Gold = 0xE1AF00,
         Aqua = 0x00FFFF,
+        Pink = 0xFF00FF,
+        Purple = 0xAF00AF,
         LightGray = 0xADADAD,
         Gray = 0x707070,
         DarkGray = 0x363636
     };
-    
-    public class FuncListener
-    {
-        [DllImport("SharpWoodCore.dll", EntryPoint = "StartFuncClient")]
-        internal static extern void StartClient(string url, NanoFunctions functions);
-
-        [DllImport("SharpWoodCore.dll", EntryPoint = "RecvFuncData")]
-        internal static extern Ret ReceiveData();
-
-        [DllImport("SharpWoodCore.dll", EntryPoint = "SendFuncData")]
-        internal static extern void SendFuncData(IntPtr data);
-
-        [DllImport("SharpWoodCore.dll", EntryPoint = "StopFuncClient")]
-        internal static extern void StopClient();
-    }
-
-    public class EventListener
-    {
-        [DllImport("SharpWoodCore.dll", EntryPoint = "StartEventClient")]
-        internal static extern void StartClient(string url, NanoFunctions functions);
-
-        [DllImport("SharpWoodCore.dll", EntryPoint = "SendEventData")]
-        internal static extern void SendData(string data);
-
-        [DllImport("SharpWoodCore.dll", EntryPoint = "StopEventClient")]
-        internal static extern int StopClient();
-    }
 
     public enum VirtualKey
     {
