@@ -49,7 +49,7 @@ namespace Sevenisko.SharpWood
 
         internal static bool start(object[] args)
         {
-            OakMisc.Log($"SharpWolf {Oakwood.GetVersion()} successfuly started on this server!");
+            OakMisc.Log($"SharpWood {Oakwood.GetVersion()} successfuly started on this server!");
             Console.WriteLine($"[INFO] Registered {OakwoodCommandSystem.GetCommandCount()} commands, {OakwoodCommandSystem.GetEventCount()} events");
             if(OnStart != null)
             {
@@ -95,7 +95,7 @@ namespace Sevenisko.SharpWood
 
             newPlayer.Health = 200.0f;
 
-            if (newPlayer.Name == "|>>>failed<<<|")
+            if (newPlayer.Name == "|>>>failed<<<|" || newPlayer.Name == "Server")
             {
                 OakPlayer.Kick(newPlayer, "Player name cannot be empty!");
             }
@@ -348,7 +348,11 @@ namespace Sevenisko.SharpWood
                 string cmd = t[0];
                 string[] cmdargs = t.Skip(1).ToArray();
 
-                if (!OakwoodCommandSystem.ExecuteCommand(player, cmd.Substring(1), cmdargs))
+                if(cmd.Substring(1) == "shwood")
+                {
+                    OakHUD.Message(player, $"SharpWood {Oakwood.GetVersion()} made by Sevenisko.", OakColor.White);
+                }
+                else if (!OakwoodCommandSystem.ExecuteCommand(player, cmd.Substring(1), cmdargs))
                 {
                     OakwoodCommandSystem.CallEvent("unknownCommand", new object[] { player, cmd.Substring(1) });
                 }

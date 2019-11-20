@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using IniParser;
-using IniParser.Model;
 
 namespace Sevenisko.SharpWood
 {
@@ -811,10 +809,9 @@ namespace Sevenisko.SharpWood
 
             if (ret == 0)
             {
+                player.Vehicle = null;
                 return true;
             }
-
-            player.Vehicle = null;
 
             return false;
         }
