@@ -1,5 +1,7 @@
 # SharpWood - A C# Wrapper for Oakwood
 
+[![SharpWood](https://img.shields.io/nuget/v/SharpWood.svg?style=flat&label=Release)](https://www.nuget.org/packages/SharpWood/)
+
 SharpWood is first community-made Oakwood API wrapper, which is using C# and its abilities to run Gamemode scripts on Oakwood.
 
 ## Installing
@@ -29,8 +31,6 @@ SharpWood is first community-made Oakwood API wrapper, which is using C# and its
 ## Used libraries
 
 - [nanomsg](https://github.com/nanomsg/nanomsg)
-
-- [NNanomsg](https://github.com/mhowlett/NNanomsg)
 
 - [MPack](https://github.com/caesay/MPack)
 
