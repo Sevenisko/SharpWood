@@ -14,6 +14,44 @@ using Timer = System.Timers.Timer;
 
 namespace Sevenisko.SharpWood
 {
+    public interface IOakNative
+    {
+        public void SetConsoleTitle(string title);
+        public void HandleSignals(Oakwood.EventHandler handler);
+    }
+
+    public class OakWinNative : IOakNative
+    {
+        [DllImport("Kernel32")]
+        public static extern bool SetConsoleCtrlHandler(Oakwood.EventHandler Handler, bool Add);
+
+        [DllImport("Kernel32", EntryPoint = "SetConsoleTitle")]
+        static extern bool Native_SetConsoleTitle(string lpConsoleTitle);
+
+        public void SetConsoleTitle(string title)
+        {
+            Native_SetConsoleTitle(title);
+        }
+
+        public void HandleSignals(Oakwood.EventHandler handler)
+        {
+            SetConsoleCtrlHandler(handler, true);
+        }
+    }
+
+    public class OakLinuxNative : IOakNative
+    {
+        public void SetConsoleTitle(string title)
+        {
+            Console.Title = title;
+        }
+
+        public void HandleSignals(Oakwood.EventHandler handler)
+        {
+            Console.CancelKeyPress += ((object sender, ConsoleCancelEventArgs e) => handler(CtrlType.CtrlClose));
+        }
+    }
+
     public class OakwoodPlayer
     {
         public string Name;
@@ -44,9 +82,6 @@ namespace Sevenisko.SharpWood
 
     public class Oakwood
     {
-        [DllImport("Kernel32")]
-        public static extern bool SetConsoleCtrlHandler(EventHandler Handler, bool Add);
-
         public delegate bool EventHandler(CtrlType sig);
 
         public static List<string> OakMethods = new List<string>();
@@ -59,13 +94,14 @@ namespace Sevenisko.SharpWood
         private static int apiThreadTimeout = 0;
         private static int eventThreadTimeout = 0;
 
-        [DllImport("Kernel32")]
-        static extern bool SetConsoleTitle(string lpConsoleTitle);
+        public static IOakNative nativeFunctions;
 
         public static bool Working { get; private set; } = false;
         public static bool IsRunning = false;
 
         private static bool CanRestart = false;
+
+        static OSPlatform platform;
 
         static Thread APIThread;
         static Thread ListenerThread;
@@ -105,16 +141,16 @@ namespace Sevenisko.SharpWood
                     }
 
                     if (apiThreadTimeout > 2 && eventThreadTimeout > 2)
-                        SetConsoleTitle($"SharpWood Development Console | Status: API and Event Thread not responding");
+                        nativeFunctions.SetConsoleTitle($"SharpWood Development Console | Status: API and Event Thread not responding");
 
                     else if (apiThreadTimeout > 2)
-                        SetConsoleTitle($"SharpWood Development Console | Status: API Thread not responding");
+                        nativeFunctions.SetConsoleTitle($"SharpWood Development Console | Status: API Thread not responding");
 
                     else if (eventThreadTimeout > 2)
-                        SetConsoleTitle($"SharpWood Development Console | Status: Event Thread not responding");
+                        nativeFunctions.SetConsoleTitle($"SharpWood Development Console | Status: Event Thread not responding");
 
                     else
-                        SetConsoleTitle($"SharpWood Development Console | Status: OK");
+                        nativeFunctions.SetConsoleTitle($"SharpWood Development Console | Status: OK");
                 }
             };
             updateTimer.Start();
@@ -320,10 +356,7 @@ namespace Sevenisko.SharpWood
             OakwoodCommandSystem.CallEvent("stop", null);
             Nanomsg.UShutdown(respSocket, 0);
             Nanomsg.UShutdown(reqSocket, 0);
-            APIThread.Abort();
-            ListenerThread.Abort();
-            WatchdogThread.Abort();
-            
+                        
             return true;
         }
 
@@ -345,18 +378,8 @@ namespace Sevenisko.SharpWood
                 IsRunning = false;
                 Working = false;
 
-                SetConsoleTitle("SharpWood Development Console | Stopped working!");
+                nativeFunctions.SetConsoleTitle("SharpWood Development Console | Stopped working!");
 
-                //OakMisc.Log("[ERROR] SharpWood has stopped working!");
-
-                if (APIThread != null)
-                {
-                    APIThread.Abort();
-                }
-                if (ListenerThread != null)
-                {
-                    ListenerThread.Abort();
-                }
                 OakwoodCommandSystem.CallEvent("stop", null);
 
                 if (CanRestart)
@@ -472,9 +495,45 @@ namespace Sevenisko.SharpWood
             }
         }
 
+        internal static OSPlatform GetPlatform()
+        {
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return OSPlatform.Windows;
+            }
+            else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return OSPlatform.Linux;
+            }
+            else
+            {
+                return OSPlatform.Create("Unknown");
+            }
+        }
+
         public static void WriteConLine(string msg)
         {
             Console.WriteLine(msg);
+        }
+
+        public static void InitNativeFunctions()
+        {
+            platform = GetPlatform();
+
+            if (platform == OSPlatform.Windows)
+            {
+                nativeFunctions = new OakWinNative();
+            }
+            else if (platform == OSPlatform.Linux)
+            {
+                throw new NotSupportedException("SharpWood unfortunately doesn't support Linux for now (networking issues). :(");
+
+                //nativeFunctions = new OakLinuxNative();
+            }
+            else
+            {
+                throw new NotSupportedException("SharpWood is supported only on Windows and Linux!");
+            }
         }
 
         /// <summary>
@@ -498,11 +557,10 @@ namespace Sevenisko.SharpWood
                 if (outbound != null)
                     outboundAddr = outbound;
 
-
-                SetConsoleTitle("SharpWood Development Console | Initializating...");
+                nativeFunctions.SetConsoleTitle("SharpWood Development Console | Initializating...");
 
                 Console.WriteLine("============================");
-                Console.WriteLine($"    SharpWood {GetVersion()}    ");
+                Console.WriteLine($"     SharpWood {GetVersion()}     ");
                 Console.WriteLine($"     Made by Sevenisko     ");
                 Console.WriteLine("============================");
 
