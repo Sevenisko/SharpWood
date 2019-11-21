@@ -7,6 +7,27 @@ namespace Sevenisko.SharpWood
 {
     public class Nanomsg
     {
+        [DllImport("nanomsg", EntryPoint = "nn_socket")]
+        internal static extern int UCreateSocket(int domain, int protocol);
+        [DllImport("nanomsg", EntryPoint = "nn_connect")]
+        internal static extern int UConnect(int socket, [MarshalAs(UnmanagedType.LPStr)]string address);
+        [DllImport("nanomsg", EntryPoint = "nn_bind")]
+        internal static extern int UBind(int socket, [MarshalAs(UnmanagedType.LPStr)]string address);
+        [DllImport("nanomsg", EntryPoint = "nn_setsockopt")]
+        internal static extern int USetSocketOption(int socket, int level, int option, IntPtr val, int length);
+        [DllImport("nanomsg", EntryPoint = "nn_getsockopt")]
+        internal static extern int UGetSockOption(int socket, int level, int option, ref int val, ref int length);
+        [DllImport("nanomsg", EntryPoint = "nn_recv")]
+        internal static extern int UReceive(int socket, ref IntPtr buf, int constant, int flags);
+        [DllImport("nanomsg", EntryPoint = "nn_send")]
+        internal static extern int USend(int socket, byte[] data, int length, int flags);
+        [DllImport("nanomsg", EntryPoint = "nn_close")]
+        internal static extern int UClose(int socket);
+        [DllImport("nanomsg", EntryPoint = "nn_freemsg")]
+        internal static extern int UFreeMessage(IntPtr buf);
+        [DllImport("nanomsg", EntryPoint = "nn_shutdown")]
+        internal static extern int UShutdown(int socket, int how);
+
         internal enum Domain
         {
             SP = 1,
@@ -161,27 +182,6 @@ namespace Sevenisko.SharpWood
             NN_INPROC = -1;
         }
 
-        [DllImport("nanomsg.dll", EntryPoint = "nn_socket")]
-        internal static extern int UCreateSocket(int domain, int protocol);
-        [DllImport("nanomsg.dll", EntryPoint = "nn_connect")]
-        internal static extern int UConnect(int socket, [MarshalAs(UnmanagedType.LPStr)]string address);
-        [DllImport("nanomsg.dll", EntryPoint = "nn_bind")]
-        internal static extern int UBind(int socket, [MarshalAs(UnmanagedType.LPStr)]string address);
-        [DllImport("nanomsg.dll", EntryPoint = "nn_setsockopt")]
-        internal static extern int USetSocketOption(int socket, int level, int option, IntPtr val, int length);
-        [DllImport("nanomsg.dll", EntryPoint = "nn_getsockopt")]
-        internal static extern int UGetSockOption(int socket, int level, int option, ref int val, ref int length);
-        [DllImport("nanomsg.dll", EntryPoint = "nn_recv")]
-        private static extern int UReceive(int socket, ref IntPtr buf, int constant, int flags);
-        [DllImport("nanomsg.dll", EntryPoint = "nn_send")]
-        internal static extern int USend(int socket, byte[] data, int length, int flags);
-        [DllImport("nanomsg.dll", EntryPoint = "nn_close")]
-        internal static extern int UClose(int socket);
-        [DllImport("nanomsg.dll", EntryPoint = "nn_freemsg")]
-        private static extern int UFreeMessage(IntPtr buf);
-        [DllImport("nanomsg.dll", EntryPoint = "nn_shutdown")]
-        internal static extern int UShutdown(int socket, int how);
-
         internal static int Socket(Domain domain, Protocol protocol)
         {
             return UCreateSocket((int)domain, (int)protocol);
@@ -246,6 +246,8 @@ namespace Sevenisko.SharpWood
 
             val = optval;
 
+            //Console.WriteLine($"GetSockOption: {rc}, {val}");
+
             return rc;
         }
 
@@ -258,6 +260,8 @@ namespace Sevenisko.SharpWood
 
             val = optval;
 
+            //Console.WriteLine($"GetSockOption: {rc}, {val}");
+
             return rc;
         }
 
@@ -265,6 +269,8 @@ namespace Sevenisko.SharpWood
         {
             IntPtr buffer = IntPtr.Zero;
             int rc = UReceive(s, ref buffer, Constants.NN_MSG, (int)flags);
+
+            //Console.WriteLine($"Receive: {rc}");
 
             if (rc < 0 || buffer == null)
             {
