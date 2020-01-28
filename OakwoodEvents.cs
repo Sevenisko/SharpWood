@@ -47,33 +47,36 @@ namespace Sevenisko.SharpWood
         public delegate void OnCBreak(CtrlType type);
         public static event OnCBreak OnConsoleBreak;
 
+        public delegate void OnOLog(DateTime time, string source, string message);
+        public static event OnOLog OnLog;
+
+        internal static void log(DateTime time, string source, string message, bool intoOakConsole = false)
+        {
+            if(intoOakConsole)
+            {
+                OakMisc.Log($"[{time.ToString("HH:mm:ss")} - {source}] {message}");
+            }
+            if (OnLog != null) OnLog(time, source, message);
+        }
+
         internal static bool start(object[] args)
         {
             OakMisc.Log($"SharpWood {Oakwood.GetVersion()} successfuly started on this server!");
             Console.WriteLine($"[INFO] Registered {OakwoodCommandSystem.GetCommandCount()} commands, {OakwoodCommandSystem.GetEventCount()} events");
-            if(OnStart != null)
-            {
-                OnStart();
-            }
+            if(OnStart != null) OnStart();
             return true;
         }
 
         internal static bool stop(object[] args)
         {
-            if(OnStop != null)
-            {
-                OnStop();
-            }
+            if(OnStop != null) OnStop();
             return true;
         }
 
         internal static bool OnConBreak(object[] args)
         {
             CtrlType ctrlType = (CtrlType)int.Parse(args[0].ToString());
-            if(OnConsoleBreak != null)
-            {
-                OnConsoleBreak(ctrlType);
-            }
+            if(OnConsoleBreak != null) OnConsoleBreak(ctrlType);
             return true;
         }
 
@@ -93,8 +96,6 @@ namespace Sevenisko.SharpWood
 
             newPlayer.Model = OakwoodResources.PlayerModels[index].Modelname;
 
-            newPlayer.Health = 200.0f;
-
             if (newPlayer.Name == "|>>>failed<<<|" || newPlayer.Name == "Server")
             {
                 OakPlayer.Kick(newPlayer, "Player name cannot be empty!");
@@ -107,10 +108,7 @@ namespace Sevenisko.SharpWood
 
                 OakPlayer.Spawn(newPlayer, new OakVec3(-1986.852539f, -5.089742f, 25.776871f), 180.0f);
 
-                if (OnPlayerConnect != null)
-                {
-                    OnPlayerConnect(newPlayer);
-                }
+                if (OnPlayerConnect != null) OnPlayerConnect(newPlayer);
             }
             return true;
         }
@@ -140,10 +138,7 @@ namespace Sevenisko.SharpWood
                         break;
                 }
 
-                if (OnConsoleText != null)
-                {
-                    OnConsoleText(msg);
-                }
+                if (OnConsoleText != null) OnConsoleText(msg);
             }
 
             return true;
@@ -161,10 +156,7 @@ namespace Sevenisko.SharpWood
                     break;
                 }
             }
-            if(OnPlayerDeath != null)
-            {
-                OnPlayerDeath(player);
-            }
+            if(OnPlayerDeath != null) OnPlayerDeath(player);
             return true;
         }
 
@@ -190,10 +182,7 @@ namespace Sevenisko.SharpWood
                 }
             }
 
-            if(OnPlayerHit != null)
-            {
-                OnPlayerHit(player, attacker, damage);
-            }
+            if(OnPlayerHit != null) OnPlayerHit(player, attacker, damage);
             return true;
         }
 
@@ -235,10 +224,7 @@ namespace Sevenisko.SharpWood
                 player.Vehicle = null;
             }
 
-            if(OnPlayerVehicleUse != null)
-            {
-                OnPlayerVehicleUse(vehicle, player, success, (VehicleSeat)sID, (VehicleEnterState)e);
-            }
+            if(OnPlayerVehicleUse != null) OnPlayerVehicleUse(vehicle, player, success, (VehicleSeat)sID, (VehicleEnterState)e);
 
             return true;
         }
@@ -264,17 +250,11 @@ namespace Sevenisko.SharpWood
 
             if(isD == 0)
             {
-                if (OnPlayerKeyDown != null)
-                {
-                    OnPlayerKeyDown(player, (VirtualKey)vKey);
-                }
+                if (OnPlayerKeyDown != null) OnPlayerKeyDown(player, (VirtualKey)vKey);
             }
             else
             {
-                if (OnPlayerKeyUp != null)
-                {
-                    OnPlayerKeyUp(player, (VirtualKey)vKey);
-                }
+                if (OnPlayerKeyUp != null) OnPlayerKeyUp(player, (VirtualKey)vKey);
             }
 
             return true;
@@ -294,10 +274,7 @@ namespace Sevenisko.SharpWood
                 }
             }
 
-            if(OnVehicleDestroy != null)
-            {
-                OnVehicleDestroy(vehicle);
-            }
+            if(OnVehicleDestroy != null) OnVehicleDestroy(vehicle);
 
             return true;
         }
@@ -317,10 +294,7 @@ namespace Sevenisko.SharpWood
                 }
             }
 
-            if(OnPlayerDisconnect != null)
-            {
-                OnPlayerDisconnect(player);
-            }
+            if(OnPlayerDisconnect != null) OnPlayerDisconnect(player);
 
             Oakwood.Players.Remove(player);
 
@@ -359,10 +333,7 @@ namespace Sevenisko.SharpWood
             }
             else
             {
-                if(OnPlayerChat != null)
-                {
-                    OnPlayerChat(player, msg);
-                }
+                if(OnPlayerChat != null) OnPlayerChat(player, msg);
             }
 
             return true;

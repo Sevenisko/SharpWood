@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Timers;
 using System.Reflection;
 using System.Diagnostics;
@@ -14,51 +12,12 @@ using Timer = System.Timers.Timer;
 
 namespace Sevenisko.SharpWood
 {
-    public interface IOakNative
-    {
-        public void SetConsoleTitle(string title);
-        public void HandleSignals(Oakwood.EventHandler handler);
-    }
-
-    public class OakWinNative : IOakNative
-    {
-        [DllImport("Kernel32")]
-        public static extern bool SetConsoleCtrlHandler(Oakwood.EventHandler Handler, bool Add);
-
-        [DllImport("Kernel32", EntryPoint = "SetConsoleTitle")]
-        static extern bool Native_SetConsoleTitle(string lpConsoleTitle);
-
-        public void SetConsoleTitle(string title)
-        {
-            Native_SetConsoleTitle(title);
-        }
-
-        public void HandleSignals(Oakwood.EventHandler handler)
-        {
-            SetConsoleCtrlHandler(handler, true);
-        }
-    }
-
-    public class OakLinuxNative : IOakNative
-    {
-        public void SetConsoleTitle(string title)
-        {
-            Console.Title = title;
-        }
-
-        public void HandleSignals(Oakwood.EventHandler handler)
-        {
-            Console.CancelKeyPress += ((object sender, ConsoleCancelEventArgs e) => handler(CtrlType.CtrlClose));
-        }
-    }
-
     public class OakwoodPlayer
     {
         public string Name;
         public int ID;
         public string Model;
-        public float Health;
-        public int TpaID;
+        public object PlayerData;
         public float Heading;
         public OakwoodVehicle Vehicle;
     }
@@ -94,14 +53,8 @@ namespace Sevenisko.SharpWood
         private static int apiThreadTimeout = 0;
         private static int eventThreadTimeout = 0;
 
-        public static IOakNative nativeFunctions;
-
         public static bool Working { get; private set; } = false;
         public static bool IsRunning = false;
-
-        private static bool CanRestart = false;
-
-        static OSPlatform platform;
 
         static Thread APIThread;
         static Thread ListenerThread;
@@ -113,9 +66,14 @@ namespace Sevenisko.SharpWood
         static int reqSocket;
         static int respSocket;
 
+        internal static void Log(string source, string message)
+        {
+            OakwoodEvents.log(DateTime.Now, source, message);
+        }
+
         internal static void ThrowRuntimeError(string msg)
         {
-            Console.WriteLine($"[ERROR] Runtime error: {msg}");
+            Log("API", $"Runtime error: {msg}");
         }
 
         private static void WatchDog()
@@ -139,48 +97,14 @@ namespace Sevenisko.SharpWood
                     {
                         ThrowFatal("Event Thread has stopped responding");
                     }
-
-                    if (apiThreadTimeout > 2 && eventThreadTimeout > 2)
-                        nativeFunctions.SetConsoleTitle($"SharpWood Development Console | Status: API and Event Thread not responding");
-
-                    else if (apiThreadTimeout > 2)
-                        nativeFunctions.SetConsoleTitle($"SharpWood Development Console | Status: API Thread not responding");
-
-                    else if (eventThreadTimeout > 2)
-                        nativeFunctions.SetConsoleTitle($"SharpWood Development Console | Status: Event Thread not responding");
-
-                    else
-                        nativeFunctions.SetConsoleTitle($"SharpWood Development Console | Status: OK");
                 }
             };
             updateTimer.Start();
         }
 
-        public static bool Handler(CtrlType sig)
-        {
-            switch (sig)
-            {
-                case CtrlType.CtrlC:
-                case CtrlType.CtrlLogoff:
-                case CtrlType.CtrlShutdown:
-                case CtrlType.CtrlClose:
-                case CtrlType.CtrlBreak:
-                    {
-                        if (!OakwoodCommandSystem.CallEvent("shConBreak", new object[] { (int)sig }))
-                        {
-                            Console.WriteLine("Exiting application...");
-                            Environment.Exit(0);
-                        }
-                    }
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
         internal static void UpdateEvents(string addr)
         {
-            Console.WriteLine("[INFO] Started event thread.");
+            Log("Watchdog", "Started event thread.");
             int con = Nanomsg.Connect(respSocket, addr);
 
             if(con < 0)
@@ -209,7 +133,7 @@ namespace Sevenisko.SharpWood
 
                     if (!OakwoodCommandSystem.CallEvent(eventName, args.ToArray()))
                     {
-                        Console.WriteLine($"[ERROR] Cannot call event '{eventName}'!");
+                        Log("EventHandler", $"Error: Cannot call event '{eventName}'!");
                     }
 
                     Nanomsg.Send(respSocket, Encoding.UTF8.GetBytes("ok"), Nanomsg.SendRecvFlags.DONTWAIT);
@@ -364,7 +288,7 @@ namespace Sevenisko.SharpWood
 
         public static void ThrowFatal(string message)
         {
-            Console.WriteLine($"[FATAL ERROR] {message}");
+            Log("Main", $"Fatal error: {message}");
 
             if (!fatalTriggered)
             {
@@ -378,59 +302,13 @@ namespace Sevenisko.SharpWood
                 IsRunning = false;
                 Working = false;
 
-                nativeFunctions.SetConsoleTitle("SharpWood Development Console | Stopped working!");
-
                 OakwoodCommandSystem.CallEvent("stop", null);
-
-                if (CanRestart)
-                {
-                    Process myProcess = new Process();
-
-                    try
-                    {
-                        myProcess.StartInfo.UseShellExecute = false;
-                        myProcess.StartInfo.FileName = Assembly.GetEntryAssembly().Location;
-                        myProcess.StartInfo.CreateNoWindow = false;
-
-                        Console.WriteLine("Restarting in 3 seconds...");
-
-                        System.Timers.Timer resetTimer = new System.Timers.Timer();
-                        resetTimer.Interval = 3000;
-                        resetTimer.AutoReset = false;
-                        resetTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
-                        {
-                            Console.Clear();
-
-                            myProcess.Start();
-
-                            Environment.Exit(1);
-                        };
-
-                        resetTimer.Start();
-
-                        while (true)
-                        {
-                            // Do nothing
-                        }
-                    }
-                    catch
-                    {
-                        CanRestart = false;
-                        ThrowFatal("Cannot execute restart process!");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("Enter any key to exit...");
-                    Console.ReadKey();
-                }
-                Environment.Exit(1);
             }
         }
 
-        public static void UpdateClient(string addr)
+        internal static void UpdateClient(string addr)
         {
-            Console.WriteLine("[INFO] Started API thread.");
+            Log("Watchdog", "Started API thread.");
             int con = Nanomsg.Connect(reqSocket, addr);
 
             if (con < 0)
@@ -441,7 +319,7 @@ namespace Sevenisko.SharpWood
             int heartbeat = 15000;
 
             Timer updateTimer = new Timer();
-            updateTimer.Interval = 50;
+            updateTimer.Interval = 1000; // Updates every second
             updateTimer.AutoReset = true;
             updateTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
             {
@@ -495,61 +373,28 @@ namespace Sevenisko.SharpWood
             }
         }
 
-        internal static OSPlatform GetPlatform()
-        {
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return OSPlatform.Windows;
-            }
-            else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                return OSPlatform.Linux;
-            }
-            else
-            {
-                return OSPlatform.Create("Unknown");
-            }
-        }
-
-        public static void WriteConLine(string msg)
-        {
-            Console.WriteLine(msg);
-        }
-
-        public static void InitNativeFunctions()
-        {
-            platform = GetPlatform();
-
-            if (platform == OSPlatform.Windows)
-            {
-                nativeFunctions = new OakWinNative();
-            }
-            else if (platform == OSPlatform.Linux)
-            {
-                throw new NotSupportedException("SharpWood unfortunately doesn't support Linux for now (networking issues). :(");
-
-                //nativeFunctions = new OakLinuxNative();
-            }
-            else
-            {
-                throw new NotSupportedException("SharpWood is supported only on Windows and Linux!");
-            }
-        }
-
         /// <summary>
         /// Creates a API client instance
         /// </summary>
         /// <param name="inbound">Inbound address (used for Events)</param>
         /// <param name="outbound">Outbound address (used for Function calls)</param>
         /// <param name="autoRestart">Auto-Restart on failure</param>
-        public static void CreateClient(string inbound, string outbound, bool autoRestart)
+        public static void CreateClient(string inbound, string outbound)
         {
-            if(!IsRunning)
+            if(!System.IO.File.Exists("nanomsg.dll") && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                ThrowFatal("Cannot find nanomsg.dll!");
+            }
+
+            if (!System.IO.File.Exists("libnanomsg.so") && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                ThrowFatal("Cannot find libnanomsg.so!");
+            }
+
+            if (!IsRunning)
             {
                 string inboundAddr = "ipc://oakwood-inbound";
                 string outboundAddr = "ipc://oakwood-outbound";
-
-                CanRestart = autoRestart;
 
                 if (inbound != null)
                     inboundAddr = inbound;
@@ -557,20 +402,11 @@ namespace Sevenisko.SharpWood
                 if (outbound != null)
                     outboundAddr = outbound;
 
-                nativeFunctions.SetConsoleTitle("SharpWood Development Console | Initializating...");
+                Log("Main", $"SharpWood {GetVersion()}");
+                Log("Main", $"Made by Sevenisko");
 
-                Console.WriteLine("============================");
-                Console.WriteLine($"     SharpWood {GetVersion()}     ");
-                Console.WriteLine($"     Made by Sevenisko     ");
-                Console.WriteLine("============================");
-
-                if (CanRestart)
-                {
-                    Console.WriteLine("Auto-Restart on fatalError enabled.");
-                }
-
-                Console.WriteLine($"Connecting inbound to '{inboundAddr}'");
-                Console.WriteLine($"Connecting outbound to '{outboundAddr}'");
+                Log("Connection", $"Connecting inbound to '{inboundAddr}'");
+                Log("Connection", $"Connecting outbound to '{outboundAddr}'");
 
                 reqSocket = Nanomsg.Socket(Nanomsg.Domain.SP, Nanomsg.Protocol.REQ);
                 respSocket = Nanomsg.Socket(Nanomsg.Domain.SP, Nanomsg.Protocol.RESPONDENT);
@@ -606,7 +442,7 @@ namespace Sevenisko.SharpWood
             }
             else
             {
-                Console.WriteLine("[ERROR] Oakwood API instance is already running!");
+                Log("Oakwood" ,"Error: Oakwood API instance is already running!");
             }
         }
 
