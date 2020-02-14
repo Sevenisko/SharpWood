@@ -1,24 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFrameworks>netcoreapp3.0;net48</TargetFrameworks>
     <Platforms>Release;x64</Platforms>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Sevenisko</Authors>
     <Product>SharpWood</Product>
     <PackageId>SharpWood</PackageId>
-    <PackageProjectUrl>https://sharpwood.beastinteractive.ml</PackageProjectUrl>
+    <PackageProjectUrl>https://sharpwood.ml</PackageProjectUrl>
     <PackageIconUrl></PackageIconUrl>
     <RepositoryUrl>https://github.com/Sevenisko/SharpWood</RepositoryUrl>
     <Description>SharpWood - A C# Wrapper for Mafia: Oakwood</Description>
-    <Copyright>Copyright © Sevenisko 2019</Copyright>
+    <Copyright>Copyright © Sevenisko 2019-2020</Copyright>
     <AssemblyName>SharpWood</AssemblyName>
     <RootNamespace>Sevenisko.SharpWood</RootNamespace>
     <PackageTags>Oakwood, Mafia, Wrapper</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <PackageReleaseNotes>- Temporarily disabled Linux support (connection issues)
-- Removed .NET Framework 4.8 support
+- Added .NET Framework support (currently only for 4.8)
 - Fixed all issues, which caused crashes</PackageReleaseNotes>
   </PropertyGroup>
 
