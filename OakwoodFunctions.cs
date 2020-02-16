@@ -99,7 +99,7 @@ namespace Sevenisko.SharpWood
     {
         public static bool Set(OakwoodPlayer player, OakVec3 position, OakVec3 direction)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_camera_set", new object[] { player.ID, position, direction })[0].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_camera_set", new object[] { player.ID, new float[] { position.x, position.y, position.z }, new float[] { direction.x, direction.y, direction.z } })[0].ToString());
 
             if (ret == 0)
             {
@@ -111,7 +111,7 @@ namespace Sevenisko.SharpWood
 
         public static bool Reset(OakwoodPlayer player)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_camera_unlock", new object[] { player.ID})[0].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_camera_unlock", new object[] { player.ID })[0].ToString());
 
             if (ret == 0)
             {
