@@ -48,6 +48,9 @@ namespace Sevenisko.SharpWood
         }
     }
 
+    /// <summary>
+    /// Oakwood colors
+    /// </summary>
     public enum OakColor
     {
         White = 0xFFFFFF,
@@ -68,6 +71,9 @@ namespace Sevenisko.SharpWood
         DarkGray = 0x363636
     };
 
+    /// <summary>
+    /// Virtual Key Code
+    /// </summary>
     public enum VirtualKey
     {
         LeftButton = 0x01,
@@ -452,6 +458,9 @@ namespace Sevenisko.SharpWood
         OEMClear = 0xFE
     }
 
+    /// <summary>
+    /// Vehicle visibility
+    /// </summary>
     public enum Visibility
     {
         Name = 0,
@@ -461,6 +470,9 @@ namespace Sevenisko.SharpWood
         Collision
     };
 
+    /// <summary>
+    /// Vehicle seat
+    /// </summary>
     public enum VehicleSeat
     {
         FrontLeft = 0,
@@ -470,24 +482,36 @@ namespace Sevenisko.SharpWood
         None
     };
 
+    /// <summary>
+    /// Vehicle Lock State
+    /// </summary>
     public enum VehicleLockState
     {
         Unlocked = 0,
         Locked
     };
 
+    /// <summary>
+    /// Vehicle Enter State
+    /// </summary>
     public enum VehicleEnterState
     {
         Leave = 0,
         Enter
     }
 
+    /// <summary>
+    /// Oakwood Fade Type
+    /// </summary>
     public enum OakwoodFade
     {
         FadeOut = 0,
         FadeIn
     };
 
+    /// <summary>
+    /// Simple Vector3 used for Oakwood
+    /// </summary>
     public struct OakVec3
     {
         public float x, y, z;
@@ -497,6 +521,15 @@ namespace Sevenisko.SharpWood
             this.x = x;
             this.y = y;
             this.z = z;
+        }
+
+        public static float Distance(OakVec3 vector1, OakVec3 vector2)
+        {
+            return (float)Math.Sqrt(
+                Math.Pow(vector1.x - vector2.x, 2) +
+                Math.Pow(vector1.y - vector2.y, 2) +
+                Math.Pow(vector1.z - vector2.z, 2)
+            );
         }
     }
 
@@ -524,6 +557,9 @@ namespace Sevenisko.SharpWood
         }
     }
 
+    /// <summary>
+    /// Oakwood resources (Vehicles, PlayerModels)
+    /// </summary>
     public class OakwoodResources
     {
         #region Player Models

@@ -16,10 +16,9 @@
     <RootNamespace>Sevenisko.SharpWood</RootNamespace>
     <PackageTags>Oakwood, Mafia, Wrapper</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.1.1</Version>
-    <PackageReleaseNotes>- Temporarily disabled Linux support (connection issues)
-- Added .NET Framework support (currently only for 4.8)
-- Fixed all issues, which caused crashes</PackageReleaseNotes>
+    <Version>1.2.0</Version>
+    <PackageReleaseNotes>- Moved Player/Vehicle functions into OakwoodPlayer/OakwoodVehicle classes
+- Added OakVec3.Distance</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

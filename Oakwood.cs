@@ -12,21 +12,633 @@ using Timer = System.Timers.Timer;
 
 namespace Sevenisko.SharpWood
 {
+    /// <summary>
+    /// Player class
+    /// </summary>
     public class OakwoodPlayer
     {
+        /// <summary>
+        /// Player name
+        /// </summary>
         public string Name;
+        /// <summary>
+        /// Player ID
+        /// </summary>
         public int ID;
+        /// <summary>
+        /// Current model name used by Player
+        /// </summary>
         public string Model;
+        /// <summary>
+        /// Stored player data
+        /// </summary>
         public object PlayerData;
+        /// <summary>
+        /// Current player heading
+        /// </summary>
         public float Heading;
+        /// <summary>
+        /// Vehicle, where player is sitting
+        /// </summary>
         public OakwoodVehicle Vehicle;
+
+        public bool SpawnTempWeapons()
+        {
+            object[] response = Oakwood.CallFunction("oak_temp_weapons_spawn", new object[] { ID });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        internal string GetName()
+        {
+            object[] ret = Oakwood.CallFunction("oak_player_name_get", new object[] { ID });
+            int retCode = int.Parse(ret[0].ToString());
+            int nInt = -5;
+            string plName = "|>>>NoName<<<|";
+
+
+
+            if (ret[1] != null)
+            {
+                plName = ret[1].ToString();
+            }
+
+            if (int.TryParse(plName, out nInt))
+            {
+                plName = "|>>>NoName<<<|";
+            }
+
+            if (retCode != 0 || plName == "|>>>NoName<<<|" || plName == "Server")
+            {
+                return "|>>>failed<<<|";
+            }
+            else
+            {
+                return plName;
+            }
+        }
+
+        public bool Spawn(OakVec3 pos, float angle)
+        {
+            object[] response = Oakwood.CallFunction("oak_player_spawn", new object[] { ID, new float[] { pos.x, pos.y, pos.z }, angle });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool Despawn()
+        {
+            object[] response = Oakwood.CallFunction("oak_player_despawn", new object[] { ID });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsValid()
+        {
+            foreach (OakwoodPlayer pl in Oakwood.Players)
+            {
+                if (pl == this)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public bool Kick(string reason)
+        {
+            object[] response = Oakwood.CallFunction("oak_player_kick", new object[] { ID, reason + "\0", reason.Length + 1 });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool Kill()
+        {
+            object[] response = Oakwood.CallFunction("oak_player_kill", new object[] { ID });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool PlayAnim(string animName)
+        {
+            object[] response = Oakwood.CallFunction("oak_player_play_anim", new object[] { ID, animName + "\0", animName.Length });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetModel(string modelName)
+        {
+            object[] response = Oakwood.CallFunction("oak_player_model_set", new object[] { ID, modelName + "\0", modelName.Length });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetHealth(float health)
+        {
+            object[] response = Oakwood.CallFunction("oak_player_health_set", new object[] { ID, health });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetPosition(OakVec3 position)
+        {
+            object[] response = Oakwood.CallFunction("oak_player_position_set", new object[] { ID, new float[] { position.x, position.y, position.z } });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetDirection(OakVec3 direction)
+        {
+            object[] response = Oakwood.CallFunction("oak_player_direction_set", new object[] { ID, new float[] { direction.x, direction.y, direction.z } });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetHeading(float angle)
+        {
+            object[] response = Oakwood.CallFunction("oak_player_heading_set", new object[] { ID, angle });
+
+            int ret = int.Parse(response[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public string GetModel()
+        {
+            return Oakwood.CallFunction("oak_player_model_get", new object[] { ID })[1].ToString();
+        }
+
+        public float GetHealth()
+        {
+            return float.Parse(Oakwood.CallFunction("oak_player_health_get", new object[] { ID })[1].ToString());
+        }
+
+        public float GetHeading()
+        {
+            return float.Parse(Oakwood.CallFunction("oak_player_heading_get", new object[] { ID })[1].ToString());
+        }
+
+        public OakVec3 GetPosition()
+        {
+            object[] pos = (object[])Oakwood.CallFunctionArray("oak_player_position_get", new object[] { ID })[1];
+
+            float posX = 0.0f;
+            float posY = 0.0f;
+            float posZ = 0.0f;
+
+            try
+            {
+                posX = float.Parse(pos[0].ToString());
+            }
+            catch
+            {
+                posX = 0.0f;
+            }
+
+            try
+            {
+                posY = float.Parse(pos[1].ToString());
+            }
+            catch
+            {
+                posY = 0.0f;
+            }
+
+            try
+            {
+                posZ = float.Parse(pos[2].ToString());
+            }
+            catch
+            {
+                posZ = 0.0f;
+            }
+
+            return new OakVec3(posX, posY, posZ);
+        }
+
+        public OakVec3 GetDirection()
+        {
+            object[] dir = (object[])Oakwood.CallFunctionArray("oak_player_direction_get", new object[] { ID })[1];
+
+            float dirX = 0.0f;
+            float dirY = 0.0f;
+            float dirZ = 0.0f;
+
+            try
+            {
+                dirX = float.Parse(dir[0].ToString());
+            }
+            catch
+            {
+                dirX = 0.0f;
+            }
+
+            try
+            {
+                dirY = float.Parse(dir[1].ToString());
+            }
+            catch
+            {
+                dirY = 0.0f;
+            }
+
+            try
+            {
+                dirZ = float.Parse(dir[2].ToString());
+            }
+            catch
+            {
+                dirZ = 0.0f;
+            }
+
+            return new OakVec3(dirX, dirY, dirZ);
+        }
+
+        public int GetVisibility(Visibility type)
+        {
+            return int.Parse(Oakwood.CallFunction("oak_player_visibility_get", new object[] { ID, (int)type })[1].ToString());
+        }
+
+        public bool SetVisibility(Visibility type, int state)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_player_visibility_set", new object[] { ID, (int)type, state })[1].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 
+    /// <summary>
+    /// Vehicle class
+    /// </summary>
     public class OakwoodVehicle
     {
+        /// <summary>
+        /// Vehicle ID
+        /// </summary>
         public int ID;
+        /// <summary>
+        /// Vehicle model name
+        /// </summary>
         public string Model;
+        /// <summary>
+        /// Vehicle name
+        /// </summary>
         public string Name;
+
+        public OakwoodVehicle Spawn(OakwoodVehicleModel model, OakVec3 position, float angle)
+        {
+            object[] r = Oakwood.CallFunction("oak_vehicle_spawn", new object[] { model.Modelname + "\0", model.Modelname.Length + 1, new float[] { position.x, position.y, position.z }, angle });
+
+            int vehID = -1;
+
+            int ret = int.Parse(r[0].ToString());
+
+            try
+            {
+                vehID = int.Parse(r[1].ToString());
+            }
+            catch
+            {
+                vehID = -1;
+            }
+
+            if (vehID == -1)
+            {
+                return null;
+            }
+
+            if (ret == -1)
+            {
+                Oakwood.CallFunction("oak_vehicle_despawn", new object[] { vehID });
+                return null;
+            }
+
+            OakwoodVehicle newVeh = new OakwoodVehicle();
+            newVeh.ID = vehID;
+            newVeh.Model = model.Modelname;
+            newVeh.Name = model.Name;
+
+            Oakwood.Vehicles.Add(newVeh);
+
+            return newVeh;
+        }
+
+        public bool Despawn()
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_despawn", new object[] { ID })[0].ToString());
+
+            if (ret == 0)
+            {
+                foreach (OakwoodVehicle veh in Oakwood.Vehicles)
+                {
+                    if (veh.ID == ID)
+                    {
+                        Oakwood.Vehicles.Remove(veh);
+                        break;
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsValid()
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_invalid", new object[] { ID })[0].ToString());
+
+            if (ret == 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool Repair()
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_repair", new object[] { ID })[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetPosition(OakVec3 position)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_position_set", new object[] { ID, new float[] { position.x, position.y, position.z } })[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetDirection(OakVec3 direction)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_direction_set", new object[] { ID, new float[] { direction.x, direction.y, direction.z } })[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetHeading(float angle)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_direction_set", new object[] { ID, angle })[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetFuel(float fuelLevel)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_fuel_set", new object[] { ID, fuelLevel })[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetTransparency(float transparency)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_transparency_set", new object[] { ID, transparency })[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool SetLock(VehicleLockState state)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_lock_set", new object[] { ID, (int)state })[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public OakVec3 GetPosition()
+        {
+            object[] pos = (object[])Oakwood.CallFunctionArray("oak_vehicle_position_get", new object[] { ID })[1];
+
+            if (pos == null)
+            {
+                return new OakVec3(0, 0, 0);
+            }
+
+            float posX = 0.0f;
+            float posY = 0.0f;
+            float posZ = 0.0f;
+
+            try
+            {
+                posX = float.Parse(pos[0].ToString());
+            }
+            catch
+            {
+                posX = 0.0f;
+            }
+
+            try
+            {
+                posY = float.Parse(pos[1].ToString());
+            }
+            catch
+            {
+                posY = 0.0f;
+            }
+
+            try
+            {
+                posZ = float.Parse(pos[2].ToString());
+            }
+            catch
+            {
+                posZ = 0.0f;
+            }
+
+            return new OakVec3(posX, posY, posZ);
+        }
+
+        public OakVec3 GetDirection()
+        {
+            object[] dir = (object[])Oakwood.CallFunctionArray("oak_vehicle_direction_get", new object[] { ID })[1];
+
+            float dirX = 0.0f;
+            float dirY = 0.0f;
+            float dirZ = 0.0f;
+
+            try
+            {
+                dirX = float.Parse(dir[0].ToString());
+            }
+            catch
+            {
+                dirX = 0.0f;
+            }
+
+            try
+            {
+                dirY = float.Parse(dir[1].ToString());
+            }
+            catch
+            {
+                dirY = 0.0f;
+            }
+
+            try
+            {
+                dirZ = float.Parse(dir[2].ToString());
+            }
+            catch
+            {
+                dirZ = 0.0f;
+            }
+
+            return new OakVec3(dirX, dirY, dirZ);
+        }
+
+        public float GetHeading()
+        {
+            return float.Parse(Oakwood.CallFunction("oak_vehicle_heading_get", new object[] { ID })[1].ToString());
+        }
+
+        public float GetFuel()
+        {
+            return float.Parse(Oakwood.CallFunction("oak_vehicle_fuel_get", new object[] { ID })[1].ToString());
+        }
+
+        public float GetTransparency()
+        {
+            return float.Parse(Oakwood.CallFunction("oak_vehicle_transparency_get", new object[] { ID })[1].ToString());
+        }
+
+        public VehicleLockState GetLock()
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_lock_get", new object[] { ID })[1].ToString());
+
+            return (VehicleLockState)ret;
+        }
+
+        public int GetVisibility(Visibility type)
+        {
+            return int.Parse(Oakwood.CallFunction("oak_vehicle_visibility_get", new object[] { ID, (int)type })[1].ToString());
+        }
+
+        public bool SetVisibility(Visibility type, int state)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_visibility_set", new object[] { ID, (int)type, state })[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 
     public enum CtrlType
@@ -39,6 +651,9 @@ namespace Sevenisko.SharpWood
         CtrlShutdown
     }
 
+    /// <summary>
+    /// The main class for SharpWood
+    /// </summary>
     public class Oakwood
     {
         public delegate bool EventHandler(CtrlType sig);
@@ -65,6 +680,16 @@ namespace Sevenisko.SharpWood
 
         static int reqSocket;
         static int respSocket;
+
+        public static List<OakwoodPlayer> GetPlayerList()
+        {
+            return Players;
+        }
+
+        public static List<OakwoodVehicle> GetVehicleList()
+        {
+            return Vehicles;
+        }
 
         internal static void Log(string source, string message)
         {
@@ -273,6 +898,10 @@ namespace Sevenisko.SharpWood
             return new object[] { statuscode, result };
         }
 
+        /// <summary>
+        /// Shuts down the SharpWood
+        /// </summary>
+        /// <returns>True on success, exception on failure.</returns>
         public static bool KillClient()
         {
             IsRunning = false;
@@ -286,6 +915,10 @@ namespace Sevenisko.SharpWood
 
         static bool fatalTriggered = false;
 
+        /// <summary>
+        /// Throws an fatal error
+        /// </summary>
+        /// <param name="message"></param>
         public static void ThrowFatal(string message)
         {
             Log("Main", $"Fatal error: {message}");
@@ -294,9 +927,9 @@ namespace Sevenisko.SharpWood
             {
                 fatalTriggered = true;
 
-                foreach (OakwoodPlayer player in Oakwood.Players)
+                foreach (OakwoodPlayer player in Players)
                 {
-                    OakPlayer.Kick(player, "Gamemode has stopped responding");
+                    player.Kick("Gamemode has stopped responding");
                 }
 
                 IsRunning = false;
@@ -378,7 +1011,6 @@ namespace Sevenisko.SharpWood
         /// </summary>
         /// <param name="inbound">Inbound address (used for Events)</param>
         /// <param name="outbound">Outbound address (used for Function calls)</param>
-        /// <param name="autoRestart">Auto-Restart on failure</param>
         public static void CreateClient(string inbound, string outbound)
         {
             if(!System.IO.File.Exists("nanomsg.dll") && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -446,6 +1078,10 @@ namespace Sevenisko.SharpWood
             }
         }
 
+        /// <summary>
+        /// Get SharpWood version
+        /// </summary>
+        /// <returns>Version string 'vX.X.X.XF'</returns>
         public static string GetVersion()
         {
             currentAssembly = typeof(Oakwood).Assembly;
