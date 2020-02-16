@@ -365,7 +365,7 @@ namespace Sevenisko.SharpWood
         /// </summary>
         public string Name;
 
-        public OakwoodVehicle Spawn(OakwoodVehicleModel model, OakVec3 position, float angle)
+        public static OakwoodVehicle Spawn(OakwoodVehicleModel model, OakVec3 position, float angle)
         {
             object[] r = Oakwood.CallFunction("oak_vehicle_spawn", new object[] { model.Modelname + "\0", model.Modelname.Length + 1, new float[] { position.x, position.y, position.z }, angle });
 

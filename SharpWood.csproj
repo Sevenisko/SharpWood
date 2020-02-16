@@ -16,9 +16,10 @@
     <RootNamespace>Sevenisko.SharpWood</RootNamespace>
     <PackageTags>Oakwood, Mafia, Wrapper</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <PackageReleaseNotes>- Moved Player/Vehicle functions into OakwoodPlayer/OakwoodVehicle classes
-- Added OakVec3.Distance</PackageReleaseNotes>
+- Added OakVec3.Distance
+- Fixed OakwoodVehicle.Spawn</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
