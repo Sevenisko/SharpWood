@@ -523,6 +523,19 @@ namespace Sevenisko.SharpWood
             this.z = z;
         }
 
+        static float Lerp(float first, float second, float by)
+        {
+            return first * (1 - by) + second * by;
+        }
+
+        public static OakVec3 Lerp(OakVec3 first, OakVec3 second, float by)
+        {
+            float retX = Lerp(first.x, second.x, by);
+            float retY = Lerp(first.y, second.y, by);
+            float retZ = Lerp(first.z, second.z, by);
+            return new OakVec3(retX, retY, retZ);
+        }
+
         public static float Distance(OakVec3 vector1, OakVec3 vector2)
         {
             return (float)Math.Sqrt(

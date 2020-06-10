@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.0;net48</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.0;netcoreapp3.1;net472;net48</TargetFrameworks>
     <Platforms>Release;x64</Platforms>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Sevenisko</Authors>
@@ -16,11 +16,8 @@
     <RootNamespace>Sevenisko.SharpWood</RootNamespace>
     <PackageTags>Oakwood, Mafia, Wrapper</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.2.2</Version>
-    <PackageReleaseNotes>- Moved Player/Vehicle functions into OakwoodPlayer/OakwoodVehicle classes
-- Added OakVec3.Distance
-- Fixed OakwoodVehicle.Spawn
-- Fixed OakCamera.Set, which caused the crash</PackageReleaseNotes>
+    <Version>1.2.3</Version>
+    <PackageReleaseNotes>- Added documentation</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
