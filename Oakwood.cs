@@ -900,18 +900,20 @@ namespace Sevenisko.SharpWood
             Log("Watchdog", "Started event thread.");
             int con = Nanomsg.Connect(respSocket, addr);
 
-            if(con != 0)
+            if(con < 0)
             {
                 throw new Exception("Cannot connect to server!");
             }
 
-            while (true)
+            Timer updateTimer = new Timer();
+            updateTimer.Interval = 50;
+            updateTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
             {
                 eventThreadTimeout = 0;
 
                 byte[] data = Nanomsg.Receive(respSocket, Nanomsg.SendRecvFlags.DONTWAIT);
 
-                if(data != null)
+                if (data != null)
                 {
                     MPack rec = MPack.ParseFromBytes(data);
 
@@ -931,7 +933,8 @@ namespace Sevenisko.SharpWood
 
                     Nanomsg.Send(respSocket, Encoding.UTF8.GetBytes("ok"), Nanomsg.SendRecvFlags.DONTWAIT);
                 }
-            }
+            };
+            updateTimer.Start();
         }
 
         internal static object[] CallFunction(string functionName, params object[] args)
@@ -1112,7 +1115,7 @@ namespace Sevenisko.SharpWood
             Log("Watchdog", "Started API thread.");
             int con = Nanomsg.Connect(reqSocket, addr);
 
-            if (con != 0)
+            if (con < 0)
             {
                 throw new Exception("Cannot connect to server!");
             }
@@ -1159,14 +1162,11 @@ namespace Sevenisko.SharpWood
                         }
                     }
                 }
+
+                apiThreadTimeout = 0;
             };
 
             updateTimer.Start();
-
-            while (true)
-            {
-                apiThreadTimeout = 0;
-            }
         }
 
         /// <summary>
@@ -1206,11 +1206,11 @@ namespace Sevenisko.SharpWood
                 reqSocket = Nanomsg.Socket(Nanomsg.Domain.SP, Nanomsg.Protocol.REQ);
                 respSocket = Nanomsg.Socket(Nanomsg.Domain.SP, Nanomsg.Protocol.RESPONDENT);
 
-                if(reqSocket != 0)
+                if(reqSocket < 0)
                 {
                     ThrowFatal("Cannot create REQ socket!");
                 }
-                if(respSocket != 0)
+                if(respSocket < 0)
                 {
                     ThrowFatal("Cannot create RESPONDENT socket!");
                 }
@@ -1232,6 +1232,10 @@ namespace Sevenisko.SharpWood
                 ListenerThread.Start();
 
                 WatchdogThread.Start();
+                
+                var JustAThread = new Thread(() => { while (true) { } });
+
+                JustAThread.Start();
 
                 IsRunning = true;
             }
@@ -1244,7 +1248,7 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Get SharpWood version
         /// </summary>
-        /// <returns>Version string 'vX.X.X.XF'</returns>
+        /// <returns>Version string 'vX.X.X.X'</returns>
         public static string GetVersion()
         {
             currentAssembly = typeof(Oakwood).Assembly;

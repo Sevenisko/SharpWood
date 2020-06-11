@@ -392,6 +392,9 @@ namespace Sevenisko.SharpWood
     #endregion
 
     #region Miscellaneous Functions
+    /// <summary>
+    /// Miscellaneous Functions
+    /// </summary>
     public class OakMisc
     {
         /// <summary>

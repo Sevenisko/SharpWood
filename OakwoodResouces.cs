@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Sevenisko.SharpWood
 {
-    public class IniFile
+    internal class IniFile
     {
         string Path;
 

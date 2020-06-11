@@ -4,6 +4,12 @@
 
 SharpWood is first community-made Oakwood API wrapper, which is using C# and its abilities to run Gamemode scripts on Oakwood.
 
+## Supported Runtimes
+* .NET Core 3.1
+* .NET Core 3.0
+* .NET Framework 4.8
+* .NET Framework 4.7.2
+
 ## Installing
 
 ### From source
@@ -32,8 +38,3 @@ SharpWood is first community-made Oakwood API wrapper, which is using C# and its
 - [nanomsg](https://github.com/nanomsg/nanomsg)
 
 - [MPack](https://github.com/caesay/MPack)
-
-
-
-
-

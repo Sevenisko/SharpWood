@@ -16,8 +16,8 @@
     <RootNamespace>Sevenisko.SharpWood</RootNamespace>
     <PackageTags>Oakwood, Mafia, Wrapper</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.2.3</Version>
-    <PackageReleaseNotes>- Added documentation</PackageReleaseNotes>
+    <Version>1.2.5</Version>
+    <PackageReleaseNotes>- Fixed Nanomsg-releated crash on startup</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -29,6 +29,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>bin\x64\Debug\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.0|x64'">
+    <DocumentationFile>bin\x64\Release\SharpWoodAPI.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

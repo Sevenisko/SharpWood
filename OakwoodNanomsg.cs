@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Sevenisko.SharpWood
 {
-    public class Nanomsg
+    internal class Nanomsg
     {
         [DllImport("nanomsg", EntryPoint = "nn_socket")]
         internal static extern int UCreateSocket(int domain, int protocol);
