@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.0;netcoreapp3.1;net472;net48</TargetFrameworks>
-    <Platforms>Release;x64</Platforms>
+    <Platforms>Release;x64;AnyCPU</Platforms>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Sevenisko</Authors>
     <Product>SharpWood</Product>
@@ -16,8 +16,8 @@
     <RootNamespace>Sevenisko.SharpWood</RootNamespace>
     <PackageTags>Oakwood, Mafia, Wrapper</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.2.5</Version>
-    <PackageReleaseNotes>- Fixed Nanomsg-releated crash on startup</PackageReleaseNotes>
+    <Version>1.2.6.2</Version>
+    <PackageReleaseNotes>- Fixed error handler</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -26,7 +26,18 @@
     <OutputPath>bin\x64\Release\</OutputPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <OutputPath>bin\x64\AnyCPU\</OutputPath>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>bin\x64\Debug\</OutputPath>
   </PropertyGroup>
@@ -35,15 +46,15 @@
     <DocumentationFile>bin\x64\Release\SharpWoodAPI.xml</DocumentationFile>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="libnanomsg.so" />
-    <None Remove="nanomsg.dll" />
-  </ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.0|AnyCPU'">
+    <DocumentationFile>bin\x64\AnyCPU\SharpWoodAPI.xml</DocumentationFile>
+  </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="libnanomsg.so" />
-    <Content Include="nanomsg.dll" />
-  </ItemGroup>
+		<Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/linux-x64/native/libnanomsg.so" Link="libnanomsg.so" Pack="true" PackagePath="runtimes/linux-x64/native/libnanomsg.so" />
+    <Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/win-x64/native/nanomsg.dll" Link="nanomsg.dll" Pack="true" PackagePath="runtimes/win-x64/native/nanomsg.dll" />
+    <Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/win-x86/native/nanomsg.dll" Link="nanomsg.dll" Pack="true" PackagePath="runtimes/win-x86/native/nanomsg.dll" />
+	</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="MPack" Version="1.1.0.10" />

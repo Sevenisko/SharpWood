@@ -186,7 +186,7 @@ namespace Sevenisko.SharpWood
         /// <returns>True if the function is successful</returns>
         public bool PlayAnim(string animName)
         {
-            object[] response = Oakwood.CallFunction("oak_player_play_anim", new object[] { ID, animName + "\0", animName.Length });
+            object[] response = Oakwood.CallFunction("oak_player_playanim", new object[] { ID, animName + "\0", animName.Length });
 
             int ret = int.Parse(response[0].ToString());
 
@@ -906,7 +906,7 @@ namespace Sevenisko.SharpWood
             }
 
             Timer updateTimer = new Timer();
-            updateTimer.Interval = 50;
+            updateTimer.Interval = 5;
             updateTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
             {
                 eventThreadTimeout = 0;
@@ -1080,7 +1080,9 @@ namespace Sevenisko.SharpWood
             OakwoodCommandSystem.CallEvent("stop", null);
             Nanomsg.UShutdown(respSocket, 0);
             Nanomsg.UShutdown(reqSocket, 0);
-                        
+
+            _quitEvent.Set();
+
             return true;
         }
 
@@ -1106,7 +1108,10 @@ namespace Sevenisko.SharpWood
                 IsRunning = false;
                 Working = false;
 
-                OakwoodCommandSystem.CallEvent("stop", null);
+                if(!OakwoodCommandSystem.CallEvent("stop", null))
+                {
+                    Environment.Exit(1);
+                }
             }
         }
 
@@ -1137,10 +1142,6 @@ namespace Sevenisko.SharpWood
 
                         if (!Working && IsRunning)
                         {
-                            string meths = CallFunction("oak__methods", null)[1].ToString();
-
-                            string[] methods = meths.Split(';');
-
                             OakwoodCommandSystem.RegisterEvent("shConBreak", OakwoodEvents.OnConBreak);
                             OakwoodCommandSystem.RegisterEvent("playerConnect", OakwoodEvents.OnConnect);
                             OakwoodCommandSystem.RegisterEvent("playerDisconnect", OakwoodEvents.OnDisconnect);
@@ -1168,6 +1169,8 @@ namespace Sevenisko.SharpWood
 
             updateTimer.Start();
         }
+
+        static ManualResetEvent _quitEvent = new ManualResetEvent(false);
 
         /// <summary>
         /// Creates a API client instance
@@ -1232,12 +1235,10 @@ namespace Sevenisko.SharpWood
                 ListenerThread.Start();
 
                 WatchdogThread.Start();
-                
-                var JustAThread = new Thread(() => { while (true) { } });
-
-                JustAThread.Start();
 
                 IsRunning = true;
+
+                _quitEvent.WaitOne();
             }
             else
             {

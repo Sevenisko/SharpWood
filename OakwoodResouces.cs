@@ -546,11 +546,25 @@ namespace Sevenisko.SharpWood
         }
     }
 
+    /// <summary>
+    /// Player model
+    /// </summary>
     public class OakwoodPlayerModel
     {
+        /// <summary>
+        /// Player simplified model name
+        /// </summary>
         public string Name;
+        /// <summary>
+        /// Player full model name
+        /// </summary>
         public string Modelname;
 
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="name">Player simplified model name</param>
+        /// <param name="model">Player full model name</param>
         public OakwoodPlayerModel(string name, string model)
         {
             Name = name;
@@ -558,11 +572,25 @@ namespace Sevenisko.SharpWood
         }
     }
 
+    /// <summary>
+    /// Vehicle model
+    /// </summary>
     public class OakwoodVehicleModel
     {
+        /// <summary>
+        /// Vehicle full name
+        /// </summary>
         public string Name;
+        /// <summary>
+        /// Vehicle model file name
+        /// </summary>
         public string Modelname;
 
+        /// <summary>
+        /// Just a constructor
+        /// </summary>
+        /// <param name="name">Vehicle full name</param>
+        /// <param name="model">Vehicle model file name</param>
         public OakwoodVehicleModel(string name, string model)
         {
             Name = name;
@@ -576,6 +604,9 @@ namespace Sevenisko.SharpWood
     public class OakwoodResources
     {
         #region Player Models
+        /// <summary>
+        /// Player Models
+        /// </summary>
         public static OakwoodPlayerModel[] PlayerModels { get; private set; } =
         {
             new OakwoodPlayerModel("Tommy", "Tommy.i3d"),
@@ -814,6 +845,9 @@ namespace Sevenisko.SharpWood
         #endregion
 
         #region Vehicle Models
+        /// <summary>
+        /// Vehicle Models
+        /// </summary>
         public static OakwoodVehicleModel[] VehicleModels =
         {
             new OakwoodVehicleModel("Bolt Ace Coupe Blue", "fordtco00.i3d"),
