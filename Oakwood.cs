@@ -34,15 +34,102 @@ namespace Sevenisko.SharpWood
         /// </summary>
         public object PlayerData;
         /// <summary>
+        /// Current player health
+        /// </summary>
+        public float Health
+        {
+            get
+            {
+                return GetHealth();
+            }
+            set
+            {
+                SetHealth(value);
+            }
+        }
+        /// <summary>
         /// Current player heading
         /// </summary>
-        public float Heading;
+        public float Heading
+        {
+            get
+            {
+                return GetHeading();
+            }
+            set
+            {
+                SetHeading(value);
+            }
+        }
+        /// <summary>
+        /// Current player position
+        /// </summary>
+        public OakVec3 Position
+        {
+            get
+            {
+                return GetPosition();
+            }
+            set
+            {
+                SetPosition(value);
+            }
+        }
+        /// <summary>
+        /// Current player direction
+        /// </summary>
+        public OakVec3 Direction
+        {
+            get
+            {
+                return GetDirection();
+            }
+            set
+            {
+                SetDirection(value);
+            }
+        }
         /// <summary>
         /// Vehicle, where player is sitting
         /// </summary>
         public OakwoodVehicle Vehicle;
 
+        /// <summary>
+        /// Camera functions
+        /// </summary>
+        public OakCamera Camera { get; private set; }
+
+        /// <summary>
+        /// HUD functions
+        /// </summary>
+        public OakHUD HUD { get; private set; }
+
+        /// <summary>
+        /// Player-Vehicle manipulation
+        /// </summary>
+        public OakVehPlayer VehicleManipulation { get; private set; }
+
         internal OakwoodPlayer Killer;
+
+        /// <summary>
+        /// Creates a player instance
+        /// </summary>
+        public OakwoodPlayer()
+        {
+            Camera = new OakCamera(this);
+            HUD = new OakHUD(this);
+            VehicleManipulation = new OakVehPlayer(this);
+        }
+
+        /// <summary>
+        /// Sends a message to player
+        /// </summary>
+        /// <param name="message">Message text</param>
+        /// <returns>True if the function is successful</returns>
+        public bool SendMessage(string message)
+        {
+            return OakChat.Send(this, message);
+        }
 
         /// <summary>
         /// Gives player weapons on next spawn
@@ -224,7 +311,7 @@ namespace Sevenisko.SharpWood
         /// </summary>
         /// <param name="health">Health value</param>
         /// <returns>True if the function is successful</returns>
-        public bool SetHealth(float health)
+        private bool SetHealth(float health)
         {
             object[] response = Oakwood.CallFunction("oak_player_health_set", new object[] { ID, health });
 
@@ -238,12 +325,7 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        /// <summary>
-        /// Sets player position
-        /// </summary>
-        /// <param name="position">New position</param>
-        /// <returns>True if the function is successful</returns>
-        public bool SetPosition(OakVec3 position)
+        private bool SetPosition(OakVec3 position)
         {
             object[] response = Oakwood.CallFunction("oak_player_position_set", new object[] { ID, new float[] { position.x, position.y, position.z } });
 
@@ -257,12 +339,7 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        /// <summary>
-        /// Sets player direction
-        /// </summary>
-        /// <param name="direction">New direction</param>
-        /// <returns>True if the function is successful</returns>
-        public bool SetDirection(OakVec3 direction)
+        private bool SetDirection(OakVec3 direction)
         {
             object[] response = Oakwood.CallFunction("oak_player_direction_set", new object[] { ID, new float[] { direction.x, direction.y, direction.z } });
 
@@ -281,7 +358,7 @@ namespace Sevenisko.SharpWood
         /// </summary>
         /// <param name="angle">Heading angle</param>
         /// <returns>True if the function is successful</returns>
-        public bool SetHeading(float angle)
+        private bool SetHeading(float angle)
         {
             object[] response = Oakwood.CallFunction("oak_player_heading_set", new object[] { ID, angle });
 
@@ -308,7 +385,7 @@ namespace Sevenisko.SharpWood
         /// Gets player's health
         /// </summary>
         /// <returns>Player's health</returns>
-        public float GetHealth()
+        private float GetHealth()
         {
             return float.Parse(Oakwood.CallFunction("oak_player_health_get", new object[] { ID })[1].ToString());
         }
@@ -317,16 +394,12 @@ namespace Sevenisko.SharpWood
         /// Gets player's heading
         /// </summary>
         /// <returns>Player's heading</returns>
-        public float GetHeading()
+        private float GetHeading()
         {
             return float.Parse(Oakwood.CallFunction("oak_player_heading_get", new object[] { ID })[1].ToString());
         }
 
-        /// <summary>
-        /// Gets player's position
-        /// </summary>
-        /// <returns>Vector of player's position, otherwise nulled Vector</returns>
-        public OakVec3 GetPosition()
+        private OakVec3 GetPosition()
         {
             object[] pos = (object[])Oakwood.CallFunctionArray("oak_player_position_get", new object[] { ID })[1];
 
@@ -364,11 +437,7 @@ namespace Sevenisko.SharpWood
             return new OakVec3(posX, posY, posZ);
         }
 
-        /// <summary>
-        /// Gets player's direction
-        /// </summary>
-        /// <returns>Vector of player's direction, otherwise nulled Vector</returns>
-        public OakVec3 GetDirection()
+        private OakVec3 GetDirection()
         {
             object[] dir = (object[])Oakwood.CallFunctionArray("oak_player_direction_get", new object[] { ID })[1];
 
@@ -452,6 +521,62 @@ namespace Sevenisko.SharpWood
         /// Vehicle name
         /// </summary>
         public string Name;
+        /// <summary>
+        /// Current vehicle fuel
+        /// </summary>
+        public float Fuel
+        {
+            get
+            {
+                return GetFuel();
+            }
+            set
+            {
+                SetFuel(value);
+            }
+        }
+        /// <summary>
+        /// Current vehicle heading
+        /// </summary>
+        public float Heading
+        {
+            get
+            {
+                return GetHeading();
+            }
+            set
+            {
+                SetHeading(value);
+            }
+        }
+        /// <summary>
+        /// Current vehicle position
+        /// </summary>
+        public OakVec3 Position
+        {
+            get
+            {
+                return GetPosition();
+            }
+            set
+            {
+                SetPosition(value);
+            }
+        }
+        /// <summary>
+        /// Current vehicle direction
+        /// </summary>
+        public OakVec3 Direction
+        {
+            get
+            {
+                return GetDirection();
+            }
+            set
+            {
+                SetDirection(value);
+            }
+        }
 
         /// <summary>
         /// Spawns a vehicle
@@ -555,12 +680,7 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        /// <summary>
-        /// Sets car position
-        /// </summary>
-        /// <param name="position">New Position</param>
-        /// <returns>True if function is successful</returns>
-        public bool SetPosition(OakVec3 position)
+        private bool SetPosition(OakVec3 position)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_position_set", new object[] { ID, new float[] { position.x, position.y, position.z } })[1].ToString());
 
@@ -572,12 +692,7 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        /// <summary>
-        /// Sets car direction
-        /// </summary>
-        /// <param name="direction">New Direction</param>
-        /// <returns>True if function is successful</returns>
-        public bool SetDirection(OakVec3 direction)
+        private bool SetDirection(OakVec3 direction)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_direction_set", new object[] { ID, new float[] { direction.x, direction.y, direction.z } })[1].ToString());
 
@@ -589,12 +704,7 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        /// <summary>
-        /// Sets car heading
-        /// </summary>
-        /// <param name="angle">Angle in degrees</param>
-        /// <returns>True if function is successful</returns>
-        public bool SetHeading(float angle)
+        private bool SetHeading(float angle)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_direction_set", new object[] { ID, angle })[1].ToString());
 
@@ -606,12 +716,7 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        /// <summary>
-        /// Sets car fuel
-        /// </summary>
-        /// <param name="fuelLevel">Fuel Level</param>
-        /// <returns>True if function is successful</returns>
-        public bool SetFuel(float fuelLevel)
+        private bool SetFuel(float fuelLevel)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_fuel_set", new object[] { ID, fuelLevel })[1].ToString());
 
@@ -657,11 +762,7 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        /// <summary>
-        /// Gets car position
-        /// </summary>
-        /// <returns>Vector of car position, otherwise returns nulled Vector</returns>
-        public OakVec3 GetPosition()
+        private OakVec3 GetPosition()
         {
             object[] pos = (object[])Oakwood.CallFunctionArray("oak_vehicle_position_get", new object[] { ID })[1];
 
@@ -704,11 +805,7 @@ namespace Sevenisko.SharpWood
             return new OakVec3(posX, posY, posZ);
         }
 
-        /// <summary>
-        /// Gets car direction
-        /// </summary>
-        /// <returns>Vector of car direction, otherwise returns nulled Vector</returns>
-        public OakVec3 GetDirection()
+        private OakVec3 GetDirection()
         {
             object[] dir = (object[])Oakwood.CallFunctionArray("oak_vehicle_direction_get", new object[] { ID })[1];
 
@@ -746,20 +843,12 @@ namespace Sevenisko.SharpWood
             return new OakVec3(dirX, dirY, dirZ);
         }
 
-        /// <summary>
-        /// Gets car heading
-        /// </summary>
-        /// <returns>Car's heading</returns>
-        public float GetHeading()
+        private float GetHeading()
         {
             return float.Parse(Oakwood.CallFunction("oak_vehicle_heading_get", new object[] { ID })[1].ToString());
         }
 
-        /// <summary>
-        /// Gets car fuel
-        /// </summary>
-        /// <returns>Car's fuel level</returns>
-        public float GetFuel()
+        private float GetFuel()
         {
             return float.Parse(Oakwood.CallFunction("oak_vehicle_fuel_get", new object[] { ID })[1].ToString());
         }
@@ -830,15 +919,27 @@ namespace Sevenisko.SharpWood
     {
         public delegate bool EventHandler(CtrlType sig);
 
-        internal static List<OakwoodPlayer> Players = new List<OakwoodPlayer>();
-        internal static List<OakwoodVehicle> Vehicles = new List<OakwoodVehicle>();
+        /// <summary>
+        /// Player list
+        /// </summary>
+        public static List<OakwoodPlayer> Players { get; internal set; } = new List<OakwoodPlayer>();
+        /// <summary>
+        /// Vehicle list
+        /// </summary>
+        public static List<OakwoodVehicle> Vehicles { get; internal set; } = new List<OakwoodVehicle>();
 
         private static string UniqueID;
 
         private static int apiThreadTimeout = 0;
         private static int eventThreadTimeout = 0;
 
+        /// <summary>
+        /// Determines if SharpWood is working or not
+        /// </summary>
         public static bool Working { get; private set; } = false;
+        /// <summary>
+        /// Determines if SharpWood is running or not
+        /// </summary>
         public static bool IsRunning = false;
 
         static Thread APIThread;
@@ -851,14 +952,29 @@ namespace Sevenisko.SharpWood
         static int reqSocket;
         static int respSocket;
 
-        public static List<OakwoodPlayer> GetPlayerList()
+        /// <summary>
+        /// Prints a message into server console
+        /// </summary>
+        /// <param name="message">Message to print</param>
+        /// <returns>True if function was successful</returns>
+        public static bool ConLog(string message)
         {
-            return Players;
+            return OakMisc.Log(message);
         }
 
-        public static List<OakwoodVehicle> GetVehicleList()
+        /// <summary>
+        /// Server Killbox
+        /// </summary>
+        public static float Killbox
         {
-            return Vehicles;
+            get
+            {
+                return OakMisc.GetKillbox();
+            }
+            set
+            {
+                OakMisc.SetKillbox(value);
+            }
         }
 
         internal static void Log(string source, string message)
@@ -871,12 +987,22 @@ namespace Sevenisko.SharpWood
             Log("API", $"Runtime error: {msg}");
         }
 
+        /// <summary>
+        /// Sends a message to everyone on server
+        /// </summary>
+        /// <param name="message">Message text</param>
+        /// <returns>True if the function is successful</returns>
+        public static bool SendChatMessage(string message)
+        {
+            return OakChat.SendAll(message);
+        }
+
         private static void WatchDog()
         {
-            System.Timers.Timer updateTimer = new System.Timers.Timer();
+            Timer updateTimer = new Timer();
             updateTimer.Interval = 1000;
             updateTimer.AutoReset = true;
-            updateTimer.Elapsed += (object sender, System.Timers.ElapsedEventArgs e) =>
+            updateTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
             {
                 if(IsRunning)
                 {
@@ -1236,6 +1362,8 @@ namespace Sevenisko.SharpWood
                 APIThread.Name = "Function Call Thread";
                 WatchdogThread.Name = "Watchdog Thread";
 
+                OakwoodCommandSystem.Init(Assembly.GetCallingAssembly().GetTypes().SelectMany(t => t.GetMethods(BindingFlags.NonPublic | BindingFlags.Static)).ToArray());
+
                 APIThread.Start();
 
                 ListenerThread.Start();
@@ -1255,7 +1383,7 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Get SharpWood version
         /// </summary>
-        /// <returns>Version string 'vX.X.X.X'</returns>
+        /// <returns>Version string 'vX.X.X'</returns>
         public static string GetVersion()
         {
             currentAssembly = typeof(Oakwood).Assembly;

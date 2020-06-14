@@ -1,33 +1,88 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Sevenisko.SharpWood
 {
-    public delegate bool OakCommandCallback(OakwoodPlayer player, params object[] args);
-    public delegate bool OakEventCallback(params object[] args);
+    public delegate void OakCommandCallback(OakwoodPlayer player, params object[] args);
+    public delegate void OakEventCallback(params object[] args);
 
+    /// <summary>
+    /// Attribute used for command registration
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
+    public class CommandAttribute : Attribute
+    {
+        internal string command;
+        internal string description;
+
+        public CommandAttribute(string command, string description)
+        {
+            this.command = command;
+            this.description = description;
+        }
+    }
+
+    /// <summary>
+    /// Command system
+    /// </summary>
     public class OakwoodCommandSystem
     {
         private static Dictionary<string, OakCommandCallback> cmdRepository = new Dictionary<string, OakCommandCallback>();
         private static Dictionary<string, OakEventCallback> eventRepository = new Dictionary<string, OakEventCallback>();
+        /// <summary>
+        /// Command descriptions
+        /// </summary>
+        public static List<string> cmdDescriptions { get; private set; }
+
+        /// <summary>
+        /// Command names
+        /// </summary>
+        public static List<string> cmdNames { get; private set; }
+
+        internal static void Init(MethodInfo[] methods)
+        {
+            cmdDescriptions = new List<string>();
+
+            foreach (var method in methods)
+            {
+                var attribute = (CommandAttribute)Attribute.GetCustomAttribute(method, typeof(CommandAttribute));
+                if (attribute != null)
+                {
+                    cmdNames.Add(attribute.command);
+                    cmdDescriptions.Add(attribute.description);
+
+                    try
+                    {
+                        RegisterCommand(attribute.command, (OakwoodPlayer player, object[] args) => method.Invoke(null, new object[] { player, args }));
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error registering a {attribute.command} command: {ex.Message}");
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Registers a command to use
         /// </summary>
         /// <param name="command">Command name</param>
         /// <param name="callback">Command callback function</param>
-        public static void RegisterCommand(string command, OakCommandCallback callback)
+        internal static bool RegisterCommand(string command, OakCommandCallback callback)
         {
             if(!HasCommand(command))
             {
                 cmdRepository[command] = new OakCommandCallback(callback);
+                return true;
             }
             else
             {
                 Console.WriteLine($"[WARN] Command `{command}` is already registered.");
+                return false;
             }
         }
 
@@ -61,7 +116,7 @@ namespace Sevenisko.SharpWood
         /// Get registered events count
         /// </summary>
         /// <returns>Count of registered events</returns>
-        public static int GetEventCount()
+        internal static int GetEventCount()
         {
             return eventRepository.Count;
         }
@@ -93,11 +148,12 @@ namespace Sevenisko.SharpWood
         /// <param name="command">Command name</param>
         /// <param name="args">Command arguments</param>
         /// <returns></returns>
-        public static bool ExecuteCommand(OakwoodPlayer player, string command, string[] args)
+        internal static bool ExecuteCommand(OakwoodPlayer player, string command, string[] args)
         {
             if (HasCommand(command))
             {
-                return cmdRepository[command](player, args);
+                cmdRepository[command](player, args);
+                return true;
             }
             else
             {
@@ -116,7 +172,8 @@ namespace Sevenisko.SharpWood
         {
             if(HasEvent(eventName))
             {
-                return eventRepository[eventName](args);
+                eventRepository[eventName](args);
+                return true;
             }
             else
             {

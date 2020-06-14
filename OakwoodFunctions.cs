@@ -11,15 +11,21 @@ namespace Sevenisko.SharpWood
     /// </summary>
     public class OakHUD
     {
+        public OakwoodPlayer player;
+
+        internal OakHUD(OakwoodPlayer pl)
+        {
+            player = pl;
+        }
+
         /// <summary>
         /// Fades a screen into color
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <param name="type">Fade type</param>
         /// <param name="duration">Fade duration</param>
         /// <param name="color">Fade color in HEX format</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Fade(OakwoodPlayer player, OakwoodFade type, int duration, int color)
+        public bool Fade(OakwoodFade type, int duration, int color)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_hud_fadeout", new object[] { player.ID, (int)type, duration, color })[1].ToString());
 
@@ -34,12 +40,11 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Fades a screen into color
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <param name="type">Fade type</param>
         /// <param name="duration">Fade duration</param>
         /// <param name="color">Fade color</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Fade(OakwoodPlayer player, OakwoodFade type, int duration, OakColor color)
+        public bool Fade(OakwoodFade type, int duration, OakColor color)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_hud_fadeout", new object[] { player.ID, (int)type, duration, (int)color })[1].ToString());
 
@@ -54,12 +59,11 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Starts a countdown
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <param name="countdown">Countdown length in seconds</param>
         /// <param name="duration">Countdown duration</param>
         /// <param name="color">Countdown color in HEX format</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Countdown(OakwoodPlayer player, int countdown, int duration, int color)
+        public bool Countdown(int countdown, int duration, int color)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_hud_countdown", new object[] { player.ID, countdown, duration, color })[1].ToString());
 
@@ -74,12 +78,11 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Starts a countdown
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <param name="countdown">Countdown length in seconds</param>
         /// <param name="duration">Countdown duration</param>
         /// <param name="color">Countdown color</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Countdown(OakwoodPlayer player, int countdown, int duration, OakColor color)
+        public bool Countdown(int countdown, int duration, OakColor color)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_hud_countdown", new object[] { player.ID, countdown, duration, (int)color })[1].ToString());
 
@@ -94,11 +97,10 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Starts a countdown
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <param name="text">Announce text</param>
         /// <param name="duration">Announce duration</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Announce(OakwoodPlayer player, string text, float duration)
+        public bool Announce(string text, float duration)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_hud_announce", new object[] { player.ID, text + "\0", text.Length + 1, duration })[1].ToString());
 
@@ -113,11 +115,10 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Prints a message in Mafia Message Box
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <param name="text">Message text</param>
         /// <param name="color">Text color in HEX format</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Message(OakwoodPlayer player, string text, int color)
+        public bool Message(string text, int color)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_hud_message", new object[] { player.ID, text + "\0", text.Length + 1, color })[1].ToString());
 
@@ -132,11 +133,10 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Prints a message in Mafia Message Box
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <param name="text">Message text</param>
         /// <param name="color">Text color</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Message(OakwoodPlayer player, string text, OakColor color)
+        public bool Message(string text, OakColor color)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_hud_message", new object[] { player.ID, text + "\0", text.Length + 1, (int)color })[1].ToString());
 
@@ -156,14 +156,20 @@ namespace Sevenisko.SharpWood
     /// </summary>
     public class OakCamera
     {
+        public OakwoodPlayer player;
+
+        internal OakCamera(OakwoodPlayer pl)
+        {
+            player = pl;
+        }
+
         /// <summary>
         /// Sets camera position
         /// </summary>
-        /// <param name="player">Player to apply this effect</param>
         /// <param name="position">Camera position</param>
         /// <param name="direction">Camera direction</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Set(OakwoodPlayer player, OakVec3 position, OakVec3 direction)
+        public bool Set(OakVec3 position, OakVec3 direction)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_camera_set", new object[] { player.ID, new float[] { position.x, position.y, position.z }, new float[] { direction.x, direction.y, direction.z } })[1].ToString());
 
@@ -178,9 +184,8 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Resets player's camera view to default
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Reset(OakwoodPlayer player)
+        public bool Reset()
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_camera_unlock", new object[] { player.ID })[1].ToString());
 
@@ -195,10 +200,9 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Targets player's camera to another player
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <param name="spectatedPlayer">Player to target</param>
         /// <returns>True if the function is successful</returns>
-        public static bool TargetPlayer(OakwoodPlayer player, OakwoodPlayer spectatedPlayer)
+        public bool TargetPlayer(OakwoodPlayer spectatedPlayer)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_camera_target_player", new object[] { player.ID, spectatedPlayer.ID })[1].ToString());
 
@@ -213,10 +217,9 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Targets player's camera to vehicle
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <param name="spectatedVehicle">Vehicle to target</param>
         /// <returns>True if the function is successful</returns>
-        public static bool TargetVehicle(OakwoodPlayer player, OakwoodVehicle spectatedVehicle)
+        public bool TargetVehicle(OakwoodVehicle spectatedVehicle)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_camera_target_vehicle", new object[] { player.ID, spectatedVehicle.ID })[1].ToString());
 
@@ -231,9 +234,8 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Un-Targets a player's camera
         /// </summary>
-        /// <param name="player">Player to apply this function</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Untarget(OakwoodPlayer player)
+        public bool Untarget()
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_camera_target_unset", new object[] { player.ID })[1].ToString());
 
@@ -248,18 +250,9 @@ namespace Sevenisko.SharpWood
     #endregion
 
     #region Chat Functions
-    /// <summary>
-    /// Chat Functions
-    /// </summary>
-    public class OakChat
+    internal class OakChat
     {
-        /// <summary>
-        /// Sends a message to player
-        /// </summary>
-        /// <param name="player">Message recipient</param>
-        /// <param name="message">Message text</param>
-        /// <returns>True if the function is successful</returns>
-        public static bool Send(OakwoodPlayer player, string message)
+        internal static bool Send(OakwoodPlayer player, string message)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_chat_send", new object[] { player.ID, message + "\0", message.Length + 1 })[0].ToString());
 
@@ -271,12 +264,8 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        /// <summary>
-        /// Sends a message to everyone on server
-        /// </summary>
-        /// <param name="message">Message text</param>
-        /// <returns>True if the function is successful</returns>
-        public static bool SendAll(string message)
+        
+        internal static bool SendAll(string message)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_chat_broadcast", new object[] { message + "\0", message.Length + 1 })[0].ToString());
 
@@ -296,14 +285,20 @@ namespace Sevenisko.SharpWood
     /// </summary>
     public class OakVehPlayer
     {
+        public OakwoodPlayer player;
+
+        internal OakVehPlayer(OakwoodPlayer pl)
+        {
+            player = pl;
+        }
+
         /// <summary>
         /// Puts a player inside of vehicle
         /// </summary>
         /// <param name="vehicle">Target vehicle</param>
-        /// <param name="player">Player to put inside</param>
         /// <param name="seat">Vehicle's seat</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Put(OakwoodVehicle vehicle, OakwoodPlayer player, VehicleSeat seat)
+        public bool Put(OakwoodVehicle vehicle, VehicleSeat seat)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_put", new object[] { vehicle.ID, player.ID, (int)seat })[1].ToString());
 
@@ -320,9 +315,8 @@ namespace Sevenisko.SharpWood
         /// Removes a player from vehicle
         /// </summary>
         /// <param name="vehicle">Target vehicle</param>
-        /// <param name="player">Player to remove from</param>
         /// <returns>True if the function is successful</returns>
-        public static bool Remove(OakwoodVehicle vehicle, OakwoodPlayer player)
+        public bool Remove(OakwoodVehicle vehicle)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_remove", new object[] { vehicle.ID, player.ID })[1].ToString());
 
@@ -336,24 +330,13 @@ namespace Sevenisko.SharpWood
         }
 
         /// <summary>
-        /// Gets player's vehicle
-        /// </summary>
-        /// <param name="player">Target player</param>
-        /// <returns>Vehicle instance, otherwise null</returns>
-        public static OakwoodVehicle Inside(OakwoodPlayer player)
-        {
-            return player.Vehicle;
-        }
-
-        /// <summary>
         /// Gets a seat of player
         /// </summary>
-        /// <param name="vehicle">Target player</param>
-        /// <param name="player">Target vehicle</param>
+        /// <param name="vehicle">Target vehicle</param>
         /// <returns>Vehicle's Seat</returns>
-        public static VehicleSeat GetSeat(OakwoodVehicle vehicle, OakwoodPlayer player)
+        public VehicleSeat GetSeat(OakwoodVehicle vehicle)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_seat_get", new object[] { player.ID })[1].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_seat_get", new object[] { vehicle.ID, player.ID })[1].ToString());
 
             if (ret == -1)
             {
@@ -369,7 +352,7 @@ namespace Sevenisko.SharpWood
         /// <param name="vehicle">Target vehicle</param>
         /// <param name="seat">Vehicle's seat</param>
         /// <returns>Player instance, otherwise null</returns>
-        public static OakwoodPlayer AtSeat(OakwoodVehicle vehicle, VehicleSeat seat)
+        public OakwoodPlayer AtSeat(OakwoodVehicle vehicle, VehicleSeat seat)
         {
             if (seat == VehicleSeat.None) return null;
 
@@ -396,17 +379,9 @@ namespace Sevenisko.SharpWood
     #endregion
 
     #region Miscellaneous Functions
-    /// <summary>
-    /// Miscellaneous Functions
-    /// </summary>
-    public class OakMisc
+    internal class OakMisc
     {
-        /// <summary>
-        /// Sends a log message inside of server console
-        /// </summary>
-        /// <param name="message">Message text</param>
-        /// <returns>True if the function is successful</returns>
-        public static bool Log(string message)
+        internal static bool Log(string message)
         {
             string msg = message + "\n\0";
             int ret = int.Parse(Oakwood.CallFunction("oak_logn", new object[] { msg, message.Length + 2 })[1].ToString());
@@ -419,12 +394,7 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        /// <summary>
-        /// Sets map's killbox
-        /// </summary>
-        /// <param name="height">Killbox height</param>
-        /// <returns>True if the function is successful</returns>
-        public static bool SetKillbox(float height)
+        internal static bool SetKillbox(float height)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_killbox_set", new object[] { height })[1].ToString());
 
@@ -436,11 +406,7 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        /// <summary>
-        /// Gets map's killbox
-        /// </summary>
-        /// <returns>Killbox height</returns>
-        public static float GetKillbox()
+        internal static float GetKillbox()
         {
             float killbox = float.Parse(Oakwood.CallFunction("oak_killbox_get", null)[1].ToString());
 

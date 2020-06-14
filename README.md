@@ -14,7 +14,7 @@ SharpWood is first community-made Oakwood API wrapper, which is using C# and its
 
 ### From source
 
-| Note: You need to have .NET Core 3.0 Runtime and SDK installed for usage!
+| Note: You need to have one of these supported Runtimes and SDKs installed for usage!
 
 1. Download/Clone the repository
 2. Open `SharpWood.sln` in Visual Studio 2019

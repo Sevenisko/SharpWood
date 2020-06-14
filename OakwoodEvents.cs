@@ -7,6 +7,9 @@ using System.Threading;
 
 namespace Sevenisko.SharpWood
 {
+    /// <summary>
+    /// Oakwood Event System
+    /// </summary>
     public class OakwoodEvents
     {
         public delegate void Start();
@@ -101,28 +104,25 @@ namespace Sevenisko.SharpWood
             if (OnLog != null) OnLog(time, source, message);
         }
 
-        internal static bool start(object[] args)
+        internal static void start(object[] args)
         {
             OakMisc.Log($"SharpWood {Oakwood.GetVersion()} successfuly started on this server!");
             Console.WriteLine($"[INFO] Registered {OakwoodCommandSystem.GetCommandCount()} commands, {OakwoodCommandSystem.GetEventCount()} events");
             if(OnStart != null) OnStart();
-            return true;
         }
 
-        internal static bool stop(object[] args)
+        internal static void stop(object[] args)
         {
             if(OnStop != null) OnStop();
-            return true;
         }
 
-        internal static bool OnConBreak(object[] args)
+        internal static void OnConBreak(object[] args)
         {
             CtrlType ctrlType = (CtrlType)int.Parse(args[0].ToString());
             if(OnConsoleBreak != null) OnConsoleBreak(ctrlType);
-            return true;
         }
 
-        internal static bool OnConnect(object[] args)
+        internal static void OnConnect(object[] args)
         {
             int playerID = int.Parse(args[0].ToString());
 
@@ -152,10 +152,9 @@ namespace Sevenisko.SharpWood
 
                 if (OnPlayerConnect != null) OnPlayerConnect(newPlayer);
             }
-            return true;
         }
 
-        internal static bool OnConsole(object[] args)
+        internal static void OnConsole(object[] args)
         {
             string msg = (string)args[0];
 
@@ -182,11 +181,9 @@ namespace Sevenisko.SharpWood
 
                 if (OnConsoleText != null) OnConsoleText(msg);
             }
-
-            return true;
         }
 
-        internal static bool OnPKill(object[] args)
+        internal static void OnPKill(object[] args)
         {
             int playerID = int.Parse(args[0].ToString());
             OakwoodPlayer player = null;
@@ -200,10 +197,9 @@ namespace Sevenisko.SharpWood
             }
             if(OnPlayerDeath != null) OnPlayerDeath(player, player.Killer == null ? player : player.Killer);
             player.Killer = null;
-            return true;
         }
 
-        internal static bool OnPlHit(object[] args)
+        internal static void OnPlHit(object[] args)
         {
             int playerID = int.Parse(args[0].ToString());
             int attackerID = int.Parse(args[1].ToString());
@@ -225,13 +221,12 @@ namespace Sevenisko.SharpWood
                 }
             }
 
-            if (player.GetHealth() == 0) player.Killer = attacker;
+            if (player.Health == 0) player.Killer = attacker;
 
             if(OnPlayerHit != null) OnPlayerHit(player, attacker, damage);
-            return true;
         }
 
-        internal static bool OnPlVehicleUse(object[] args)
+        internal static void OnPlVehicleUse(object[] args)
         {
             int vehID = int.Parse(args[0].ToString());
             int plID = int.Parse(args[1].ToString());
@@ -270,11 +265,9 @@ namespace Sevenisko.SharpWood
             }
 
             if(OnPlayerVehicleUse != null) OnPlayerVehicleUse(vehicle, player, success, (VehicleSeat)sID, (VehicleEnterState)e);
-
-            return true;
         }
 
-        internal static bool OnPlKey(object[] args)
+        internal static void OnPlKey(object[] args)
         {
             int plID = int.Parse(args[0].ToString());
             int vKey = int.Parse(args[1].ToString());
@@ -301,11 +294,9 @@ namespace Sevenisko.SharpWood
             {
                 if (OnPlayerKeyUp != null) OnPlayerKeyUp(player, (VirtualKey)vKey);
             }
-
-            return true;
         }
 
-        internal static bool OnVehDestroy(object[] args)
+        internal static void OnVehDestroy(object[] args)
         {
             int vehID = int.Parse(args[0].ToString());
 
@@ -320,11 +311,9 @@ namespace Sevenisko.SharpWood
             }
 
             if(OnVehicleDestroy != null) OnVehicleDestroy(vehicle);
-
-            return true;
         }
 
-        internal static bool OnDisconnect(object[] args)
+        internal static void OnDisconnect(object[] args)
         {
             int playerID = int.Parse(args[0].ToString());
             OakwoodPlayer player = null;
@@ -342,11 +331,9 @@ namespace Sevenisko.SharpWood
             if(OnPlayerDisconnect != null) OnPlayerDisconnect(player);
 
             Oakwood.Players.Remove(player);
-
-            return true;
         }
 
-        internal static bool OnChat(object[] args)
+        internal static void OnChat(object[] args)
         {
             int playerID = int.Parse(args[0].ToString());
             string msg = (string)args[1];
@@ -367,11 +354,7 @@ namespace Sevenisko.SharpWood
                 string cmd = t[0];
                 string[] cmdargs = t.Skip(1).ToArray();
 
-                if(cmd.Substring(1) == "shwood")
-                {
-                    OakHUD.Message(player, $"SharpWood {Oakwood.GetVersion()} made by Sevenisko.", OakColor.White);
-                }
-                else if (!OakwoodCommandSystem.ExecuteCommand(player, cmd.Substring(1), cmdargs))
+                if (!OakwoodCommandSystem.ExecuteCommand(player, cmd.Substring(1), cmdargs))
                 {
                     OakwoodCommandSystem.CallEvent("unknownCommand", new object[] { player, cmd.Substring(1) });
                 }
@@ -380,8 +363,6 @@ namespace Sevenisko.SharpWood
             {
                 if(OnPlayerChat != null) OnPlayerChat(player, msg);
             }
-
-            return true;
         }
     }
 }
