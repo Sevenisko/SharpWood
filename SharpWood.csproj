@@ -16,8 +16,8 @@
     <RootNamespace>Sevenisko.SharpWood</RootNamespace>
     <PackageTags>Oakwood, Mafia, Wrapper</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.2.6.2</Version>
-    <PackageReleaseNotes>- Fixed error handler</PackageReleaseNotes>
+    <Version>1.2.7</Version>
+    <PackageReleaseNotes>- Added killer into OnPlayerDeath event</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -29,7 +29,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
-    <OutputPath>bin\x64\AnyCPU\</OutputPath>
+    <OutputPath>bin\AnyCPU\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -47,7 +47,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.0|AnyCPU'">
-    <DocumentationFile>bin\x64\AnyCPU\SharpWoodAPI.xml</DocumentationFile>
+    <DocumentationFile>bin\AnyCPU\SharpWoodAPI.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>

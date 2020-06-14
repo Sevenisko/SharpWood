@@ -56,7 +56,7 @@ namespace Sevenisko.SharpWood
         /// </summary>
         public static event OnPKeyDown OnPlayerKeyUp;
 
-        public delegate void OnPDeath(OakwoodPlayer player);
+        public delegate void OnPDeath(OakwoodPlayer player, OakwoodPlayer killer);
         /// <summary>
         /// Triggered when player dies
         /// </summary>
@@ -198,7 +198,8 @@ namespace Sevenisko.SharpWood
                     break;
                 }
             }
-            if(OnPlayerDeath != null) OnPlayerDeath(player);
+            if(OnPlayerDeath != null) OnPlayerDeath(player, player.Killer == null ? player : player.Killer);
+            player.Killer = null;
             return true;
         }
 
@@ -223,6 +224,8 @@ namespace Sevenisko.SharpWood
                     attacker = pl;
                 }
             }
+
+            if (player.GetHealth() == 0) player.Killer = attacker;
 
             if(OnPlayerHit != null) OnPlayerHit(player, attacker, damage);
             return true;
