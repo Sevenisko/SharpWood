@@ -104,11 +104,6 @@ namespace Sevenisko.SharpWood
         /// </summary>
         public OakHUD HUD { get; private set; }
 
-        /// <summary>
-        /// Player-Vehicle manipulation
-        /// </summary>
-        public OakVehPlayer VehicleManipulation { get; private set; }
-
         internal OakwoodPlayer Killer;
 
         /// <summary>
@@ -118,7 +113,6 @@ namespace Sevenisko.SharpWood
         {
             Camera = new OakCamera(this);
             HUD = new OakHUD(this);
-            VehicleManipulation = new OakVehPlayer(this);
         }
 
         /// <summary>
@@ -501,6 +495,60 @@ namespace Sevenisko.SharpWood
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Puts a player inside of vehicle
+        /// </summary>
+        /// <param name="vehicle">Target vehicle</param>
+        /// <param name="seat">Vehicle's seat</param>
+        /// <returns>True if the function is successful</returns>
+        public bool Put(OakwoodVehicle vehicle, VehicleSeat seat)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_put", new object[] { vehicle.ID, ID, (int)seat })[1].ToString());
+
+            if (ret == 0)
+            {
+                Vehicle = vehicle;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Removes a player from vehicle
+        /// </summary>
+        /// <param name="vehicle">Target vehicle</param>
+        /// <returns>True if the function is successful</returns>
+        public bool Remove(OakwoodVehicle vehicle)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_remove", new object[] { vehicle.ID, ID })[1].ToString());
+
+            if (ret == 0)
+            {
+                Vehicle = null;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets a seat of player
+        /// </summary>
+        /// <param name="vehicle">Target vehicle</param>
+        /// <returns>Vehicle's Seat</returns>
+        public VehicleSeat GetSeat(OakwoodVehicle vehicle)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_seat_get", new object[] { vehicle.ID, ID })[1].ToString());
+
+            if (ret == -1)
+            {
+                return VehicleSeat.None;
+            }
+
+            return (VehicleSeat)ret;
         }
     }
 
@@ -899,6 +947,94 @@ namespace Sevenisko.SharpWood
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Puts a player inside of vehicle
+        /// </summary>
+        /// <param name="player">Target player</param>
+        /// <param name="seat">Vehicle's seat</param>
+        /// <returns>True if the function is successful</returns>
+        public bool Put(OakwoodPlayer player, VehicleSeat seat)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_put", new object[] { ID, player.ID, (int)seat })[1].ToString());
+
+            if (ret == 0)
+            {
+                player.Vehicle = this;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Removes a player from vehicle
+        /// </summary>
+        /// <param name="player">Target player</param>
+        /// <returns>True if the function is successful</returns>
+        public bool Remove(OakwoodPlayer player)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_remove", new object[] { ID, player.ID })[1].ToString());
+
+            if (ret == 0)
+            {
+                player.Vehicle = null;
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Gets a seat of player
+        /// </summary>
+        /// <param name="player">Target player</param>
+        /// <returns>Vehicle's Seat</returns>
+        public VehicleSeat GetSeat(OakwoodPlayer player)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_player_seat_get", new object[] { ID, player.ID })[1].ToString());
+
+            if (ret == -1)
+            {
+                return VehicleSeat.None;
+            }
+
+            return (VehicleSeat)ret;
+        }
+
+        /// <summary>
+        /// Gets player from seat of the vehicle
+        /// </summary>
+        /// <param name="seat">Vehicle's seat</param>
+        /// <returns>Player instance, otherwise null</returns>
+        public OakwoodPlayer AtSeat(VehicleSeat seat)
+        {
+            if (seat == VehicleSeat.None) return null;
+
+            string res = Oakwood.CallFunction("oak_vehicle_player_at_seat", new object[] { ID, (int)seat })[1].ToString();
+
+            if (res == "4294967293")
+            {
+                return null;
+            }
+
+            int ret = int.Parse(res);
+
+            if (ret == -1)
+            {
+                return null;
+            }
+
+            foreach (OakwoodPlayer player in Oakwood.Players)
+            {
+                if (player.ID == ret)
+                {
+                    return player;
+                }
+            }
+
+            return null;
         }
     }
 

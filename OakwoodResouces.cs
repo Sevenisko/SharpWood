@@ -566,7 +566,7 @@ namespace Sevenisko.SharpWood
             return new OakVec3(vec1.x + vec2.x, vec1.y + vec2.y, vec1.z + vec2.z);
         }
 
-        public static OakVec3 operator +(OakVec3 vec1, OakVec3 vec2)
+        public static OakVec3 operator -(OakVec3 vec1, OakVec3 vec2)
         {
             return new OakVec3(vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z);
         }
