@@ -354,7 +354,20 @@ namespace Sevenisko.SharpWood
                 string cmd = t[0];
                 string[] cmdargs = t.Skip(1).ToArray();
 
-                if (!OakwoodCommandSystem.ExecuteCommand(player, cmd.Substring(1), cmdargs))
+                if (cmd.Substring(1) == "shwood")
+                {
+                    player.HUD.Message($"SharpWood {Oakwood.GetVersion()} made by Sevenisko.", OakColor.White);
+                    player.HUD.Message($"Command System customized by NanobotZ.", OakColor.White);
+                }
+                else if (cmd.Substring(1) == "help")
+                {
+                    player.SendMessage($"Command help:");
+                    for (int i = 0; i < OakwoodCommandSystem.cmdDescriptions.Count; i++)
+                    {
+                        player.SendMessage($" > {OakwoodCommandSystem.cmdDescriptions[i]}");
+                    }
+                }
+                else if (!OakwoodCommandSystem.ExecuteCommand(player, cmd.Substring(1), cmdargs))
                 {
                     OakwoodCommandSystem.CallEvent("unknownCommand", new object[] { player, cmd.Substring(1) });
                 }

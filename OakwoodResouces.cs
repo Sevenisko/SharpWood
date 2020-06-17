@@ -536,6 +536,41 @@ namespace Sevenisko.SharpWood
             return new OakVec3(retX, retY, retZ);
         }
 
+        public static OakVec3 operator -(OakVec3 vec)
+        {
+            return new OakVec3(-vec.x, -vec.y, -vec.z);
+        }
+
+        public static OakVec3 operator *(OakVec3 vec, float scalar)
+        {
+            return new OakVec3(vec.x * scalar, vec.y * scalar, vec.z * scalar);
+        }
+
+        public static OakVec3 operator *(OakVec3 vec1, OakVec3 vec2)
+        {
+            return new OakVec3(vec1.x * vec2.x, vec1.y * vec2.y, vec1.z * vec2.z);
+        }
+
+        public static OakVec3 operator /(OakVec3 vec, float scalar)
+        {
+            return new OakVec3(vec.x / scalar, vec.y / scalar, vec.z / scalar);
+        }
+
+        public static OakVec3 operator /(OakVec3 vec1, OakVec3 vec2)
+        {
+            return new OakVec3(vec1.x / vec2.x, vec1.y / vec2.y, vec1.z / vec2.z);
+        }
+
+        public static OakVec3 operator +(OakVec3 vec1, OakVec3 vec2)
+        {
+            return new OakVec3(vec1.x + vec2.x, vec1.y + vec2.y, vec1.z + vec2.z);
+        }
+
+        public static OakVec3 operator +(OakVec3 vec1, OakVec3 vec2)
+        {
+            return new OakVec3(vec1.x - vec2.x, vec1.y - vec2.y, vec1.z - vec2.z);
+        }
+
         public static float Distance(OakVec3 vector1, OakVec3 vector2)
         {
             return (float)Math.Sqrt(

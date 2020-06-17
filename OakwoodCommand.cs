@@ -18,11 +18,20 @@ namespace Sevenisko.SharpWood
     {
         internal string command;
         internal string description;
+        internal bool visibleToHelp;
 
         public CommandAttribute(string command, string description)
         {
             this.command = command;
             this.description = description;
+            this.visibleToHelp = true;
+        }
+
+        public CommandAttribute(string command, string description, bool visibleToHelp)
+        {
+            this.command = command;
+            this.description = description;
+            this.visibleToHelp = visibleToHelp;
         }
     }
 
@@ -43,25 +52,132 @@ namespace Sevenisko.SharpWood
         /// </summary>
         public static List<string> cmdNames { get; private set; }
 
+        static Dictionary<Type, string> typeDictionary = new Dictionary<Type, string>
+        {
+            { typeof(sbyte), "sbyte" },
+            { typeof(byte), "byte" },
+            { typeof(short), "short" },
+            { typeof(ushort), "ushort" },
+            { typeof(int), "int" },
+            { typeof(uint), "uint" },
+            { typeof(long), "long" },
+            { typeof(ulong), "ulong" },
+            { typeof(float), "float" },
+            { typeof(double), "double" },
+            { typeof(decimal), "decimal" },
+            { typeof(bool), "bool" },
+            { typeof(char), "char" },
+            { typeof(string), "string" }
+        };
+
         internal static void Init(MethodInfo[] methods)
         {
             cmdDescriptions = new List<string>();
 
             foreach (var method in methods)
             {
-                var attribute = (CommandAttribute)Attribute.GetCustomAttribute(method, typeof(CommandAttribute));
+                var attribute = (CommandAttribute)method.GetCustomAttribute(typeof(CommandAttribute));
                 if (attribute != null)
                 {
-                    cmdNames.Add(attribute.command);
-                    cmdDescriptions.Add(attribute.description);
+                    var methodParams = method.GetParameters();
+                    var paramsOk = true;
+                    var hadPlayerAlready = false;
+                    var usage = $"/{attribute.command}";
+                    var stringBuilder = new StringBuilder();
+                    foreach (var methodParam in methodParams)
+                    {
+                        if (methodParam.ParameterType == typeof(OakwoodPlayer))
+                        {
+                            if (hadPlayerAlready)
+                            {
+                                Console.WriteLine($"[ERROR] Command '{method}' not registered, has more then one player defined.");
+                                break;
+                            }
+                            hadPlayerAlready = true;
+                            continue;
+                        }
+
+                        if (!typeDictionary.ContainsKey(methodParam.ParameterType))
+                        {
+                            paramsOk = false;
+                            break;
+                        }
+
+                        if (methodParam.IsOptional)
+                            stringBuilder.Append($" ({typeDictionary[methodParam.ParameterType]} {methodParam.Name})");
+                        else
+                            stringBuilder.Append($" <{typeDictionary[methodParam.ParameterType]} {methodParam.Name}>");
+                    }
+
+                    if (!paramsOk)
+                    {
+                        Console.WriteLine($"[ERROR] Command '{method}' not registered, has parameter(s) that are not primitives (except OakwoodPlayer).");
+                        continue;
+                    }
+
+                    usage += stringBuilder.ToString();
+
+                    if(attribute.visibleToHelp) cmdDescriptions.Add(usage + " - " + attribute.description);
 
                     try
                     {
-                        RegisterCommand(attribute.command, (OakwoodPlayer player, object[] args) => method.Invoke(null, new object[] { player, args }));
+                        OakwoodCommandSystem.RegisterCommand(attribute.command, (OakwoodPlayer player, object[] args) =>
+                        {
+                            try
+                            {
+                                var methodParameters = method.GetParameters();
+                                var parameters = new List<object>();
+                                var playerParamsCount = methodParameters.Any(mp => mp.ParameterType == typeof(OakwoodPlayer)) ? 1 : 0;
+
+                                if (args.Length < methodParameters.Count(mp => !mp.HasDefaultValue) - playerParamsCount)
+                                {
+                                    OakChat.Send(player, "Usage: " + usage);
+                                    return;
+                                }
+
+                                int id = 0;
+                                foreach (var methodParameter in methodParameters)
+                                {
+                                    object parameter;
+                                    var parameterType = methodParameter.ParameterType;
+
+                                    if (parameterType == typeof(OakwoodPlayer))
+                                        parameter = player;
+                                    else
+                                    {
+                                        try
+                                        {
+                                            parameter = Convert.ChangeType(args[id++], parameterType);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            if (methodParameter.HasDefaultValue)
+                                                parameter = methodParameter.DefaultValue;
+                                            else
+                                            {
+                                                Console.WriteLine(ex.Message);
+                                                OakChat.Send(player, $"Invalid value for parameter '{methodParameter.Name}', should be of type {typeDictionary[methodParameter.ParameterType]}.");
+                                                return;
+                                            }
+                                        }
+                                    }
+
+                                    parameters.Add(parameter);
+                                }
+
+                                method.Invoke(null, parameters.ToArray());
+                            }
+                            catch (Exception ex)
+                            {
+                                OakChat.Send(player, "Something went wrong while processing the command.");
+                                Console.WriteLine("[ERROR] " + ex.ToString());
+                                return;
+                            }
+                        });
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Error registering a {attribute.command} command: {ex.Message}");
+                        Console.WriteLine($"[ERROR] Error registering a '{attribute.command}' command: {ex.Message}");
                     }
                 }
             }
