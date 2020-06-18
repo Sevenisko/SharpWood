@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.0;netcoreapp3.1;net472;net48</TargetFrameworks>
-    <Platforms>Release;x64;AnyCPU</Platforms>
+    <Platforms>x64;AnyCPU;x86</Platforms>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Sevenisko</Authors>
     <Product>SharpWood</Product>
@@ -29,7 +29,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
-    <OutputPath>bin\AnyCPU\</OutputPath>
+    <OutputPath>bin\AnyCPU\Release\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CheckForOverflowUnderflow>false</CheckForOverflowUnderflow>
+    <OutputPath>bin\x86\Release\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -39,7 +45,12 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <OutputPath>bin\x64\Debug\</OutputPath>
+    <OutputPath>bin\AnyCPU\Debug\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <OutputPath>bin\x86\Debug\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.0|x64'">
@@ -47,14 +58,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.0|AnyCPU'">
-    <DocumentationFile>bin\AnyCPU\SharpWoodAPI.xml</DocumentationFile>
+    <DocumentationFile>bin\AnyCPU\Release\SharpWoodAPI.xml</DocumentationFile>
   </PropertyGroup>
 
-  <ItemGroup>
-		<Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/linux-x64/native/libnanomsg.so" Link="libnanomsg.so" Pack="true" PackagePath="runtimes/linux-x64/native/libnanomsg.so" />
-    <Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/win-x64/native/nanomsg.dll" Link="nanomsg.dll" Pack="true" PackagePath="runtimes/win-x64/native/nanomsg.dll" />
-    <Content CopyToOutputDirectory="PreserveNewest" Include="runtimes/win-x86/native/nanomsg.dll" Link="nanomsg.dll" Pack="true" PackagePath="runtimes/win-x86/native/nanomsg.dll" />
-	</ItemGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.0|x86'">
+    <DocumentationFile>bin\x86\Release\SharpWoodAPI.xml</DocumentationFile>
+  </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="MPack" Version="1.1.0.10" />
@@ -62,5 +71,20 @@
 
   <ItemGroup>
     <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

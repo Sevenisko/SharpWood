@@ -9,6 +9,7 @@ using System.Diagnostics;
 using CS;
 using System.Runtime.InteropServices;
 using Timer = System.Timers.Timer;
+using System.IO;
 
 namespace Sevenisko.SharpWood
 {
@@ -1509,15 +1510,15 @@ namespace Sevenisko.SharpWood
         /// <param name="outbound">Outbound address (used for Function calls)</param>
         public static void CreateClient(string inbound, string outbound)
         {
-            if(!System.IO.File.Exists("nanomsg.dll") && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                ThrowFatal("Cannot find nanomsg.dll!");
+                if(RuntimeInformation.ProcessArchitecture == Architecture.X64)
+                    File.WriteAllBytes("nanomsg.dll", Resources.nanomsg_x64);
+                else if (RuntimeInformation.ProcessArchitecture == Architecture.X86)
+                    File.WriteAllBytes("nanomsg.dll", Resources.nanomsg_x86);
             }
-
-            if (!System.IO.File.Exists("libnanomsg.so") && RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-            {
-                ThrowFatal("Cannot find libnanomsg.so!");
-            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                File.WriteAllBytes("libnanomsg.so", Resources.libnanomsg);
 
             if (!IsRunning)
             {
