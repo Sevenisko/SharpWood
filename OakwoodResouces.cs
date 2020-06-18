@@ -49,27 +49,51 @@ namespace Sevenisko.SharpWood
     }
 
     /// <summary>
-    /// Oakwood colors
+    /// Color used in Oakwood
     /// </summary>
-    public enum OakColor
+    public class OakColor
     {
-        White = 0xFFFFFF,
-        Red = 0xFF0000,
-        DarkRed = 0xAF0000,
-        Blue = 0x0000FF,
-        DarkBlue = 0x0000AF,
-        Black = 0x000000,
-        Green = 0x00FF00,
-        DarkGreen = 0x00AF00,
-        Yellow = 0xFFFF00,
-        Gold = 0xE1AF00,
-        Aqua = 0x00FFFF,
-        Pink = 0xFF00FF,
-        Purple = 0xAF00AF,
-        LightGray = 0xADADAD,
-        Gray = 0x707070,
-        DarkGray = 0x363636
-    };
+        public static OakColor White = new OakColor(255, 255, 255);
+        public static OakColor Red = new OakColor(255, 0, 0);
+        public static OakColor DarkRed = new OakColor(150, 0, 0);
+        public static OakColor Blue = new OakColor(0, 0, 255);
+        public static OakColor DarkBlue = new OakColor(0, 0, 150);
+        public static OakColor Black = new OakColor(0, 0, 0);
+        public static OakColor Green = new OakColor(0, 255, 0);
+        public static OakColor DarkGreen = new OakColor(0, 150, 0);
+        public static OakColor Yellow = new OakColor(255, 255, 0);
+        public static OakColor Gold = new OakColor(14, 150, 0);
+        public static OakColor Aqua = new OakColor(0, 255, 255);
+        public static OakColor Pink = new OakColor(255, 0, 255);
+        public static OakColor Purple = new OakColor(150, 0, 150);
+        public static OakColor LightGray = new OakColor(130, 130, 130);
+        public static OakColor Gray = new OakColor(70, 70, 70);
+        public static OakColor DarkGray = new OakColor(18, 18, 18);
+
+        public int r, g, b;
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="r">Red</param>
+        /// <param name="g">Green</param>
+        /// <param name="b">Blue</param>
+        public OakColor(int r, int g, int b)
+        {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+        }
+
+        /// <summary>
+        /// Converts a color into Int32 color
+        /// </summary>
+        /// <returns>Color in Int32</returns>
+        public int ConvertToInt32()
+        {
+            return r * g * b;
+        }
+    }
 
     /// <summary>
     /// Virtual Key Code

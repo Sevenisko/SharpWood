@@ -48,6 +48,20 @@ namespace Sevenisko.SharpWood
             }
         }
         /// <summary>
+        /// Current player color
+        /// </summary>
+        public int Color
+        {
+            get
+            {
+                return GetColor();
+            }
+            set
+            {
+                SetColor(value);
+            }
+        }
+        /// <summary>
         /// Current player heading
         /// </summary>
         public float Heading
@@ -132,6 +146,48 @@ namespace Sevenisko.SharpWood
         public bool SpawnTempWeapons()
         {
             object[] response = Oakwood.CallFunction("oak_temp_weapons_spawn", new object[] { ID });
+
+            int ret = int.Parse(response[1].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool GiveWeapon(int weaponID, int ammoLoaded, int ammoInInventory)
+        {
+            object[] response = Oakwood.CallFunction("oak_player_give_weapon", new object[] { ID, weaponID, ammoLoaded, ammoInInventory });
+
+            int ret = int.Parse(response[1].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        internal int GetColor()
+        {
+            object[] response = Oakwood.CallFunction("oak_player_color_get", new object[] { ID });
+
+            int ret = int.Parse(response[1].ToString());
+
+            if (ret != 0 || ret != -1)
+            {
+                return ret;
+            }
+
+            return -1;
+        }
+
+        internal bool SetColor(int color)
+        {
+            object[] response = Oakwood.CallFunction("oak_player_color_set", new object[] { ID, color});
 
             int ret = int.Parse(response[1].ToString());
 
@@ -1190,6 +1246,8 @@ namespace Sevenisko.SharpWood
                         args.Add(v.Value);
                     }
 
+                    Console.WriteLine($"Event: {eventName}");
+
                     if (!OakwoodCommandSystem.CallEvent(eventName, args.ToArray()))
                     {
                         Log("EventHandler", $"Error: Cannot call event '{eventName}'!");
@@ -1247,6 +1305,8 @@ namespace Sevenisko.SharpWood
             {
                 ThrowRuntimeError($"Response from '{functionName}' is NULL.");
             }
+
+            Console.WriteLine($"Function: {functionName} = {statuscode}: {result}");
 
             //Log("DebugAPI", $"[{functionName} = {statuscode}]: {result}");
 
@@ -1316,6 +1376,8 @@ namespace Sevenisko.SharpWood
                 {
                     val3 = null;
                 }
+
+                Console.WriteLine($"Function: {functionName} = {statuscode}: {result}");
 
                 //Log("DebugAPI", $"[{functionName} = {statuscode}]: ({val1}, {val2}, {val3})");
 

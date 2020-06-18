@@ -23,49 +23,11 @@ namespace Sevenisko.SharpWood
         /// </summary>
         /// <param name="type">Fade type</param>
         /// <param name="duration">Fade duration</param>
-        /// <param name="color">Fade color in HEX format</param>
-        /// <returns>True if the function is successful</returns>
-        public bool Fade(OakwoodFade type, int duration, int color)
-        {
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_fadeout", new object[] { player.ID, (int)type, duration, color })[1].ToString());
-
-            if (ret == -1)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Fades a screen into color
-        /// </summary>
-        /// <param name="type">Fade type</param>
-        /// <param name="duration">Fade duration</param>
         /// <param name="color">Fade color</param>
         /// <returns>True if the function is successful</returns>
         public bool Fade(OakwoodFade type, int duration, OakColor color)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_fadeout", new object[] { player.ID, (int)type, duration, (int)color })[1].ToString());
-
-            if (ret == -1)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Starts a countdown
-        /// </summary>
-        /// <param name="countdown">Countdown length in seconds</param>
-        /// <param name="duration">Countdown duration</param>
-        /// <param name="color">Countdown color in HEX format</param>
-        /// <returns>True if the function is successful</returns>
-        public bool Countdown(int countdown, int duration, int color)
-        {
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_countdown", new object[] { player.ID, countdown, duration, color })[1].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_hud_fadeout", new object[] { player.ID, (int)type, duration, color.ConvertToInt32() })[1].ToString());
 
             if (ret == -1)
             {
@@ -84,7 +46,7 @@ namespace Sevenisko.SharpWood
         /// <returns>True if the function is successful</returns>
         public bool Countdown(int countdown, int duration, OakColor color)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_countdown", new object[] { player.ID, countdown, duration, (int)color })[1].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_hud_countdown", new object[] { player.ID, countdown, duration, color.ConvertToInt32() })[1].ToString());
 
             if (ret == -1)
             {
@@ -116,29 +78,11 @@ namespace Sevenisko.SharpWood
         /// Prints a message in Mafia Message Box
         /// </summary>
         /// <param name="text">Message text</param>
-        /// <param name="color">Text color in HEX format</param>
-        /// <returns>True if the function is successful</returns>
-        public bool Message(string text, int color)
-        {
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_message", new object[] { player.ID, text + "\0", text.Length + 1, color })[1].ToString());
-
-            if (ret == -1)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Prints a message in Mafia Message Box
-        /// </summary>
-        /// <param name="text">Message text</param>
         /// <param name="color">Text color</param>
         /// <returns>True if the function is successful</returns>
         public bool Message(string text, OakColor color)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_hud_message", new object[] { player.ID, text + "\0", text.Length + 1, (int)color })[1].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_hud_message", new object[] { player.ID, text + "\0", text.Length + 1, color.ConvertToInt32() })[1].ToString());
 
             if (ret == -1)
             {
