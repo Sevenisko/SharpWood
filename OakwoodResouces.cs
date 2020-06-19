@@ -91,7 +91,21 @@ namespace Sevenisko.SharpWood
         /// <returns>Color in Int32</returns>
         public int ConvertToInt32()
         {
-            return r * g * b;
+            int rgb = r;
+            rgb = (rgb << 8) + g;
+            rgb = (rgb << 8) + b;
+
+            return rgb;
+        }
+
+        /// <summary>
+        /// Creates a color from HEX value
+        /// </summary>
+        /// <param name="rgb">Color integer</param>
+        /// <returns></returns>
+        public static OakColor FromInt(int rgb)
+        {
+            return new OakColor((rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
         }
     }
 

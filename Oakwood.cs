@@ -48,7 +48,7 @@ namespace Sevenisko.SharpWood
                 SetHealth(value);
             }
         }
-        /// <summary>
+        /*/// <summary>
         /// Current player color
         /// </summary>
         public int Color
@@ -61,7 +61,7 @@ namespace Sevenisko.SharpWood
             {
                 SetColor(value);
             }
-        }
+        }*/
         /// <summary>
         /// Current player heading
         /// </summary>
@@ -141,12 +141,15 @@ namespace Sevenisko.SharpWood
         }
 
         /// <summary>
-        /// Gives player weapons on next spawn
+        /// Gives player a weapon
         /// </summary>
-        /// <returns>True if the function is successful</returns>
-        public bool SpawnTempWeapons()
+        /// <param name="weaponID">Weapon ID</param>
+        /// <param name="ammoLoaded">Ammo in magazine</param>
+        /// <param name="ammoInInventory">Ammo in inventory</param>
+        /// <returns>True if function is successful.</returns>
+        public bool GiveWeapon(int weaponID, int ammoLoaded, int ammoInInventory)
         {
-            object[] response = Oakwood.CallFunction("oak_temp_weapons_spawn", new object[] { ID });
+            object[] response = Oakwood.CallFunction("oak_player_give_weapon", new object[] { ID, weaponID, ammoLoaded, ammoInInventory });
 
             int ret = int.Parse(response[1].ToString());
 
@@ -158,9 +161,14 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        public bool GiveWeapon(int weaponID, int ammoLoaded, int ammoInInventory)
+        /// <summary>
+        /// Removes a weapon from player's inventory
+        /// </summary>
+        /// <param name="weaponID">Weapon ID</param>
+        /// <returns>True if function is successful.</returns>
+        public bool RemoveWeapon(int weaponID)
         {
-            object[] response = Oakwood.CallFunction("oak_player_give_weapon", new object[] { ID, weaponID, ammoLoaded, ammoInInventory });
+            object[] response = Oakwood.CallFunction("oak_player_remove_weapon", new object[] { ID, weaponID });
 
             int ret = int.Parse(response[1].ToString());
 
@@ -186,9 +194,9 @@ namespace Sevenisko.SharpWood
             return -1;
         }
 
-        internal bool SetColor(int color)
+        internal bool SetColor(OakColor color)
         {
-            object[] response = Oakwood.CallFunction("oak_player_color_set", new object[] { ID, color});
+            object[] response = Oakwood.CallFunction("oak_player_color_set", new object[] { ID, color.ConvertToInt32()});
 
             int ret = int.Parse(response[1].ToString());
 
@@ -1247,8 +1255,6 @@ namespace Sevenisko.SharpWood
                         args.Add(v.Value);
                     }
 
-                    Console.WriteLine($"Event: {eventName}");
-
                     if (!OakwoodCommandSystem.CallEvent(eventName, args.ToArray()))
                     {
                         Log("EventHandler", $"Error: Cannot call event '{eventName}'!");
@@ -1306,8 +1312,6 @@ namespace Sevenisko.SharpWood
             {
                 ThrowRuntimeError($"Response from '{functionName}' is NULL.");
             }
-
-            Console.WriteLine($"Function: {functionName} = {statuscode}: {result}");
 
             //Log("DebugAPI", $"[{functionName} = {statuscode}]: {result}");
 
@@ -1377,8 +1381,6 @@ namespace Sevenisko.SharpWood
                 {
                     val3 = null;
                 }
-
-                Console.WriteLine($"Function: {functionName} = {statuscode}: {result}");
 
                 //Log("DebugAPI", $"[{functionName} = {statuscode}]: ({val1}, {val2}, {val3})");
 
