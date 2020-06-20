@@ -278,7 +278,7 @@ namespace Sevenisko.SharpWood
                 }
             }
 
-            if(isD == 0)
+            if(isDown)
             {
                 if (OnPlayerKeyDown != null) OnPlayerKeyDown(player, (VirtualKey)vKey);
             }
