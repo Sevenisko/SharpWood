@@ -548,6 +548,44 @@ namespace Sevenisko.SharpWood
     };
 
     /// <summary>
+    /// Oakwood Weapons
+    /// </summary>
+    public enum OakwoodWeapon
+    {
+        KnuckleDuster = 0,
+        Knife,
+        BaseballBat,
+        Molotov,
+        ColtDetectiveSpecial,
+        SWModel27Magnum,
+        SWModel10MP,
+        Colt1911,
+        TommyGun,
+        PumpActionShotgun,
+        SawnoffShutgun,
+        Springfield,
+        MosinNagant,
+        Grenade,
+        Key,
+        Bucket,
+        Flashlight,
+        Documents,
+        Bar,
+        Papers,
+        Bomb,
+        DoorKeys,
+        SafeKey,
+        Crowbar,
+        FlyTickets,
+        Box,
+        Plank,
+        BrokenBottle,
+        SmallKey,
+        Sword,
+        DogHead
+    };
+
+    /// <summary>
     /// Simple Vector3 used for Oakwood
     /// </summary>
     public struct OakVec3

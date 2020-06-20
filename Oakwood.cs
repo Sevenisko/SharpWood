@@ -177,13 +177,13 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Gives player a weapon
         /// </summary>
-        /// <param name="weaponID">Weapon ID</param>
+        /// <param name="weapon">Weapon</param>
         /// <param name="ammoLoaded">Ammo in magazine</param>
         /// <param name="ammoInInventory">Ammo in inventory</param>
         /// <returns>True if function is successful.</returns>
-        public bool GiveWeapon(int weaponID, int ammoLoaded, int ammoInInventory)
+        public bool GiveWeapon(OakwoodWeapon weapon, int ammoLoaded, int ammoInInventory)
         {
-            object[] response = Oakwood.CallFunction("oak_player_give_weapon", new object[] { ID, weaponID, ammoLoaded, ammoInInventory });
+            object[] response = Oakwood.CallFunction("oak_player_give_weapon", new object[] { ID, (int)weapon, ammoLoaded, ammoInInventory });
 
             int ret = int.Parse(response[1].ToString());
 
@@ -198,11 +198,11 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Removes a weapon from player's inventory
         /// </summary>
-        /// <param name="weaponID">Weapon ID</param>
+        /// <param name="weapon">Weapon</param>
         /// <returns>True if function is successful.</returns>
-        public bool RemoveWeapon(int weaponID)
+        public bool RemoveWeapon(OakwoodWeapon weapon)
         {
-            object[] response = Oakwood.CallFunction("oak_player_remove_weapon", new object[] { ID, weaponID });
+            object[] response = Oakwood.CallFunction("oak_player_remove_weapon", new object[] { ID, (int)weapon });
 
             int ret = int.Parse(response[1].ToString());
 
@@ -1632,7 +1632,7 @@ namespace Sevenisko.SharpWood
                 }
 
                 Debug.Assert(Nanomsg.SetSockOpt(reqSocket, Nanomsg.SocketOption.SUB_SUBSCRIBE, 0) >= 0);
-
+                
                 APIThread = new Thread(() => UpdateClient(outboundAddr));
 
                 ListenerThread = new Thread(() => UpdateEvents(inboundAddr));
@@ -1643,7 +1643,7 @@ namespace Sevenisko.SharpWood
                 APIThread.Name = "Function Call Thread";
                 WatchdogThread.Name = "Watchdog Thread";
 
-                OakwoodCommandSystem.Init(Assembly.GetCallingAssembly().GetTypes().SelectMany(t => t.GetMethods(BindingFlags.NonPublic | BindingFlags.Static)).ToArray());
+                OakwoodCommandSystem.Init(Assembly.GetCallingAssembly().GetTypes().SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)).ToArray());
 
                 APIThread.Start();
 

@@ -121,7 +121,7 @@ namespace Sevenisko.SharpWood
 
                     try
                     {
-                        OakwoodCommandSystem.RegisterCommand(attribute.command, (OakwoodPlayer player, object[] args) =>
+                        RegisterCommand(attribute.command, (OakwoodPlayer player, object[] args) =>
                         {
                             try
                             {
