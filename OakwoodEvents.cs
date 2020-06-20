@@ -158,29 +158,21 @@ namespace Sevenisko.SharpWood
         {
             string msg = (string)args[0];
 
-            if(msg.StartsWith("!"))
+            switch (msg)
             {
-                OakChat.SendAll($"[CHAT] Server: {msg.Substring(1)}");
-                OakMisc.Log($"[CHAT] Server: {msg.Substring(1)}");
+                case "shwood":
+                    {
+                        OakMisc.Log($"This server is using SharpWood {Oakwood.GetVersion()} made by Sevenisko.");
+                    }
+                    break;
+                case "shwood-throwfatal":
+                    {
+                        Oakwood.ThrowFatal("User-called");
+                    }
+                    break;
             }
-            else
-            {
-                switch (msg)
-                {
-                    case "shwood":
-                        {
-                            OakMisc.Log($"This server is using SharpWood {Oakwood.GetVersion()} made by Sevenisko.");
-                        }
-                        break;
-                    case "shwood-throwfatal":
-                        {
-                            Oakwood.ThrowFatal("User-called");
-                        }
-                        break;
-                }
 
-                if (OnConsoleText != null) OnConsoleText(msg);
-            }
+            if (OnConsoleText != null) OnConsoleText(msg);
         }
 
         internal static void OnPKill(object[] args)

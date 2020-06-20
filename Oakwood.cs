@@ -104,6 +104,40 @@ namespace Sevenisko.SharpWood
                 SetDirection(value);
             }
         }
+
+        /// <summary>
+        /// Current player IP Address
+        /// </summary>
+        public string IP
+        {
+            get
+            {
+                return GetIP().Replace("::ffff:", "");
+            }
+        }
+
+        /// <summary>
+        /// Current player State code
+        /// </summary>
+        public string StateCode
+        {
+            get
+            {
+                return GetStateCode();
+            }
+        }
+
+        /// <summary>
+        /// Current player State name
+        /// </summary>
+        public string StateName
+        {
+            get
+            {
+                return GetStateName();
+            }
+        }
+
         /// <summary>
         /// Vehicle, where player is sitting
         /// </summary>
@@ -196,7 +230,7 @@ namespace Sevenisko.SharpWood
 
         internal bool SetColor(OakColor color)
         {
-            object[] response = Oakwood.CallFunction("oak_player_color_set", new object[] { ID, color.ConvertToInt32()});
+            object[] response = Oakwood.CallFunction("oak_player_color_set", new object[] { ID, color.ConvertToInt32() });
 
             int ret = int.Parse(response[1].ToString());
 
@@ -206,6 +240,58 @@ namespace Sevenisko.SharpWood
             }
 
             return false;
+        }
+
+        internal string GetIP()
+        {
+            object[] ret = Oakwood.CallFunction("oak_player_ip_get", new object[] { ID });
+            int retCode = int.Parse(ret[0].ToString());
+            string ip = "invalid";
+
+            if (ret[1] != null)
+            {
+                ip = ret[1].ToString();
+            }
+
+            return ip;
+        }
+
+        internal string GetStateCode()
+        {
+            object[] ret = Oakwood.CallFunction("oak_player_statecode_get", new object[] { ID });
+            int retCode = int.Parse(ret[0].ToString());
+            string r = "invalid";
+
+            if (ret[1] != null)
+            {
+                r = ret[1].ToString();
+            }
+
+            if (r.Contains("N/A"))
+            {
+                r = "Unknown";
+            }
+
+            return r;
+        }
+
+        internal string GetStateName()
+        {
+            object[] ret = Oakwood.CallFunction("oak_player_statename_get", new object[] { ID });
+            int retCode = int.Parse(ret[0].ToString());
+            string r = "invalid";
+
+            if (ret[1] != null)
+            {
+                r = ret[1].ToString();
+            }
+
+            if (r.Contains("--"))
+            {
+                r = "IDK";
+            }
+
+            return r;
         }
 
         internal string GetName()

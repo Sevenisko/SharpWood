@@ -16,8 +16,10 @@
     <RootNamespace>Sevenisko.SharpWood</RootNamespace>
     <PackageTags>Oakwood, Mafia, Wrapper</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-    <Version>1.3.2.1</Version>
-    <PackageReleaseNotes>- Added internal help command</PackageReleaseNotes>
+    <Version>1.4</Version>
+    <PackageReleaseNotes>- Added OakColor class (you can use your own colors)
+- Added functions for Oakwood patch
+- Native libraries are included in the Library itself and are extracted on Runtime</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
