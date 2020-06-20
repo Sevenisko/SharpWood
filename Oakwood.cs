@@ -1165,14 +1165,8 @@ namespace Sevenisko.SharpWood
 
             string res = Oakwood.CallFunction("oak_vehicle_player_at_seat", new object[] { ID, (int)seat })[1].ToString();
 
-            if (res == "4294967293")
-            {
-                return null;
-            }
-
-            int ret = int.Parse(res);
-
-            if (ret == -1)
+            uint ret = uint.Parse(res);
+            if (ret >= int.MaxValue)
             {
                 return null;
             }
