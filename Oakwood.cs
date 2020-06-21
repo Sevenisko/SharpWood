@@ -353,6 +353,7 @@ namespace Sevenisko.SharpWood
 
             if (ret == 0)
             {
+                Vehicle = null;
                 return true;
             }
 
@@ -828,6 +829,17 @@ namespace Sevenisko.SharpWood
         /// <returns>True if function is successful</returns>
         public bool Despawn()
         {
+            var playersInVehicle = new List<OakwoodPlayer>();
+            foreach (VehicleSeat seat in Enum.GetValues(typeof(VehicleSeat)))
+            {
+                if (seat == VehicleSeat.None)
+                    continue;
+
+                var player = AtSeat(seat);
+                if (player != null)
+                    playersInVehicle.Add(player);
+            }
+
             int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_despawn", new object[] { ID })[1].ToString());
 
             if (ret == 0)
@@ -836,6 +848,8 @@ namespace Sevenisko.SharpWood
                 {
                     if (veh.ID == ID)
                     {
+                        foreach (var player in playersInVehicle)
+                            player.Vehicle = null;
                         Oakwood.Vehicles.Remove(veh);
                         break;
                     }
