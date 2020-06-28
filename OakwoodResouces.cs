@@ -590,7 +590,7 @@ namespace Sevenisko.SharpWood
     /// </summary>
     public enum OakwoodWeapon
     {
-        KnuckleDuster = 0,
+        KnuckleDuster = 2,
         Knife,
         BaseballBat,
         Molotov,
