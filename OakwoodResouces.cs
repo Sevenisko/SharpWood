@@ -5,46 +5,84 @@ using System.Text;
 
 namespace Sevenisko.SharpWood
 {
-    internal class IniFile
+    public enum DialogType
     {
-        string Path;
+        MsgBox, // Normal Message Box
+        Input, // Text Input
+        Password // Password Input
+    }
 
-        [DllImport("kernel32", CharSet = CharSet.Unicode)]
-        static extern long WritePrivateProfileString(string Section, string Key, string Value, string FilePath);
+    /// <summary>
+    /// Class for Dialogs in Oakwood
+    /// </summary>
+    public class OakDialog
+    {
+        /// <summary>
+        /// Dialog type
+        /// </summary>
+        public DialogType Type { get; private set; }
 
-        [DllImport("kernel32", CharSet = CharSet.Unicode)]
-        static extern int GetPrivateProfileString(string Section, string Key, string Default, StringBuilder RetVal, int Size, string FilePath);
+        /// <summary>
+        /// Callback ID - Used in OnDialogClose event
+        /// </summary>
+        public int callbackID { get; private set; }
 
-        public IniFile(string IniPath = null)
+        /// <summary>
+        /// Dialog title
+        /// </summary>
+        public string Title;
+
+        /// <summary>
+        /// Dialog content
+        /// </summary>
+        public string Message;
+
+        /// <summary>
+        /// First button text (OK button)
+        /// </summary>
+        public string ButtonOK;
+
+        /// <summary>
+        /// Second button text (Cancel button)
+        /// </summary>
+        public string ButtonCancel;
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="type">Dialog Type</param>
+        /// <param name="callbackid">Callback ID</param>
+        /// <param name="title">Dialog Title</param>
+        /// <param name="message">Dialog content</param>
+        /// <param name="buttonok">Button #1 text (OK/Yes button)</param>
+        /// <param name="buttoncancel">Button #2 text (Cancel/No button)</param>
+        public OakDialog(DialogType type, int callbackid, string title, string message, string buttonok = "OK", string buttoncancel = "")
         {
-            Path = new FileInfo(IniPath + ".ini").FullName.ToString();
+            Type = type;
+            callbackID = callbackid;
+            Title = title;
+            Message = message;
+            ButtonOK = buttonok;
+            ButtonCancel = buttoncancel;
         }
 
-        public string Read(string Key, string Section = null)
+        /// <summary>
+        /// Shows a dialog to player
+        /// </summary>
+        /// <param name="player">Player to see the dialog</param>
+        /// <returns>True if function was successful</returns>
+        public bool Show(OakwoodPlayer player)
         {
-            var RetVal = new StringBuilder(255);
-            GetPrivateProfileString(Section ?? "SWUserConfig", Key, "", RetVal, 255, Path);
-            return RetVal.ToString();
-        }
+            object[] response = Oakwood.CallFunction("oak_dialog_show", new object[] { player.ID, Title + "\0", Title.Length + 1, Message + "\0", Message.Length + 1, ButtonOK + "\0", ButtonOK.Length + 1, ButtonCancel + "\0", ButtonCancel.Length + 1, callbackID, (int)Type });
 
-        public void Write(string Key, string Value, string Section = null)
-        {
-            WritePrivateProfileString(Section ?? "SWUserConfig", Key, Value, Path);
-        }
+            int ret = int.Parse(response[1].ToString());
 
-        public void DeleteKey(string Key, string Section = null)
-        {
-            Write(Key, null, Section ?? "SWUserConfig");
-        }
+            if (ret == 0)
+            {
+                return true;
+            }
 
-        public void DeleteSection(string Section = null)
-        {
-            Write(null, null, Section ?? "SWUserConfig");
-        }
-
-        public bool KeyExists(string Key, string Section = null)
-        {
-            return Read(Key, Section ?? "SWUserConfig").Length > 0;
+            return false;
         }
     }
 

@@ -165,6 +165,32 @@ namespace Sevenisko.SharpWood
         }
 
         /// <summary>
+        /// Clears player's chat
+        /// </summary>
+        /// <returns>True if function was successful</returns>
+        public bool ClearChat()
+        {
+            return OakChat.Clear(this);
+        }
+
+        /// <summary>
+        /// Enables/Disables player input
+        /// </summary>
+        /// <param name="state">Input state</param>
+        /// <returns>True if function was successful</returns>
+        public bool EnableInput(bool state)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_player_input_enable", new object[] { ID, Convert.ToInt32(state) })[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Sends a message to player
         /// </summary>
         /// <param name="message">Message text</param>
@@ -267,9 +293,16 @@ namespace Sevenisko.SharpWood
                 r = ret[1].ToString();
             }
 
-            if (r.Contains("N/A"))
+            if (r.Contains("--"))
             {
-                r = "Unknown";
+                if (IP == "127.0.0.1")
+                {
+                    r = "LOC";
+                }
+                else
+                {
+                    r = "IDK";
+                }
             }
 
             return r;
@@ -286,9 +319,16 @@ namespace Sevenisko.SharpWood
                 r = ret[1].ToString();
             }
 
-            if (r.Contains("--"))
+            if (r.Contains("N/A"))
             {
-                r = "IDK";
+                if(IP == "127.0.0.1")
+                {
+                    r = "Local";
+                }
+                else
+                {
+                    r = "Unknown";
+                }
             }
 
             return r;
@@ -701,6 +741,26 @@ namespace Sevenisko.SharpWood
 
             return (VehicleSeat)ret;
         }
+
+        /// <summary>
+        /// Creates a explosion
+        /// </summary>
+        /// <param name="radius">Explosion radius</param>
+        /// <param name="force">Explosion force</param>
+        /// <returns>True if the function is successful</returns>
+        public bool CreateExplosion(float radius, float force)
+        {
+            OakVec3 pos = Position;
+
+            int ret = int.Parse(Oakwood.CallFunction("oak_create_explosion", new object[] { ID, new float[] { pos.x, pos.y, pos.z }, radius, force })[1].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 
     /// <summary>
@@ -774,6 +834,36 @@ namespace Sevenisko.SharpWood
             set
             {
                 SetDirection(value);
+            }
+        }
+
+        /// <summary>
+        /// Current vehicle speed
+        /// </summary>
+        public float Speed
+        {
+            get
+            {
+                return GetSpeed();
+            }
+            set
+            {
+                SetSpeed(value);
+            }
+        }
+
+        /// <summary>
+        /// Current vehicle velocity
+        /// </summary>
+        public OakVec3 Velocity
+        {
+            get
+            {
+                return GetVelocity();
+            }
+            set
+            {
+                SetVelocity(value);
             }
         }
 
@@ -927,6 +1017,30 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
+        private bool SetSpeed(float newSpeed)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_speed_set", new object[] { ID, newSpeed })[1].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool SetVelocity(OakVec3 newVelocity)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_velocity_set", new object[] { ID, new float[] { newVelocity.x, newVelocity.y, newVelocity.z } })[1].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         /// <summary>
         /// Sets car transparency
         /// </summary>
@@ -1050,6 +1164,54 @@ namespace Sevenisko.SharpWood
         private float GetFuel()
         {
             return float.Parse(Oakwood.CallFunction("oak_vehicle_fuel_get", new object[] { ID })[1].ToString());
+        }
+
+        private float GetSpeed()
+        {
+            return float.Parse(Oakwood.CallFunction("oak_vehicle_speed_get", new object[] { ID })[1].ToString());
+        }
+
+        private OakVec3 GetVelocity()
+        {
+            object[] pos = (object[])Oakwood.CallFunctionArray("oak_vehicle_velocity_get", new object[] { ID })[1];
+
+            if (pos == null)
+            {
+                return new OakVec3(0, 0, 0);
+            }
+
+            float velX = 0.0f;
+            float velY = 0.0f;
+            float velZ = 0.0f;
+
+            try
+            {
+                velX = float.Parse(pos[0].ToString());
+            }
+            catch
+            {
+                velX = 0.0f;
+            }
+
+            try
+            {
+                velY = float.Parse(pos[1].ToString());
+            }
+            catch
+            {
+                velY = 0.0f;
+            }
+
+            try
+            {
+                velZ = float.Parse(pos[2].ToString());
+            }
+            catch
+            {
+                velZ = 0.0f;
+            }
+
+            return new OakVec3(velX, velY, velZ);
         }
 
         /// <summary>
@@ -1186,6 +1348,17 @@ namespace Sevenisko.SharpWood
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Explodes a car
+        /// </summary>
+        /// <returns>True if function is successful</returns>
+        public bool Explode()
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_explode", new object[] { ID })[1].ToString());
+
+            return false;
         }
     }
 
@@ -1570,6 +1743,7 @@ namespace Sevenisko.SharpWood
                             OakwoodCommandSystem.RegisterEvent("vehicleDestroy", OakwoodEvents.OnVehDestroy);
                             OakwoodCommandSystem.RegisterEvent("playerKey", OakwoodEvents.OnPlKey);
                             OakwoodCommandSystem.RegisterEvent("playerChat", OakwoodEvents.OnChat);
+                            OakwoodCommandSystem.RegisterEvent("dialogClose", OakwoodEvents.OnDlgClose);
                             OakwoodCommandSystem.RegisterEvent("console", OakwoodEvents.OnConsole);
                             OakwoodCommandSystem.RegisterEvent("start", OakwoodEvents.start);
                             OakwoodCommandSystem.RegisterEvent("stop", OakwoodEvents.stop);
@@ -1620,7 +1794,7 @@ namespace Sevenisko.SharpWood
                     outboundAddr = outbound;
 
                 Log("Main", $"SharpWood {GetVersion()}");
-                Log("Main", $"Made by Sevenisko");
+                Log("Main", $"Made by Sevenisko & NanobotZ");
 
                 Log("Connection", $"Connecting inbound to '{inboundAddr}'");
                 Log("Connection", $"Connecting outbound to '{outboundAddr}'");

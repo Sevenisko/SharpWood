@@ -59,7 +59,7 @@ namespace Sevenisko.SharpWood
         /// </summary>
         public static event OnPKeyDown OnPlayerKeyUp;
 
-        public delegate void OnPDeath(OakwoodPlayer player, OakwoodPlayer killer);
+        public delegate void OnPDeath(OakwoodPlayer player, OakwoodPlayer killer, int reason, int hitType, int playerPart);
         /// <summary>
         /// Triggered when player dies
         /// </summary>
@@ -82,6 +82,9 @@ namespace Sevenisko.SharpWood
         /// Triggered when player sends a chat message
         /// </summary>
         public static event OnPChat OnPlayerChat;
+
+        public delegate void OnDClose(OakwoodPlayer player, int dialogID, int selection, string text);
+        public static event OnDClose OnDialogClose;
 
         public delegate void OnCBreak(CtrlType type);
         /// <summary>
@@ -114,6 +117,25 @@ namespace Sevenisko.SharpWood
         internal static void stop(object[] args)
         {
             if(OnStop != null) OnStop();
+        }
+
+        internal static void OnDlgClose(object[] args)
+        {
+            int playerID = int.Parse(args[0].ToString());
+            OakwoodPlayer player = null;
+            foreach (OakwoodPlayer pl in Oakwood.Players)
+            {
+                if (pl.ID == playerID)
+                {
+                    player = pl;
+                    break;
+                }
+            }
+            int dialogID = int.Parse(args[1].ToString());
+            int sel = int.Parse(args[2].ToString());
+            string text = args[3].ToString();
+
+            if (OnDialogClose != null) OnDialogClose(player, dialogID, sel, text);
         }
 
         internal static void OnConBreak(object[] args)
@@ -178,7 +200,13 @@ namespace Sevenisko.SharpWood
         internal static void OnPKill(object[] args)
         {
             int playerID = int.Parse(args[0].ToString());
+            int killerID = int.Parse(args[1].ToString());
+            int reason= int.Parse(args[2].ToString());
+            int hitType = int.Parse(args[3].ToString());
+            int playerPart = int.Parse(args[4].ToString());
             OakwoodPlayer player = null;
+            OakwoodPlayer killer = null;
+
             foreach (OakwoodPlayer pl in Oakwood.Players)
             {
                 if(pl.ID == playerID)
@@ -187,8 +215,17 @@ namespace Sevenisko.SharpWood
                     break;
                 }
             }
-            if(OnPlayerDeath != null) OnPlayerDeath(player, player.Killer == null ? player : player.Killer);
-            player.Killer = null;
+
+            foreach (OakwoodPlayer pl in Oakwood.Players)
+            {
+                if (pl.ID == killerID)
+                {
+                    killer = pl;
+                    break;
+                }
+            }
+
+            if (OnPlayerDeath != null) OnPlayerDeath(player, killer, reason, hitType, playerPart);
         }
 
         internal static void OnPlHit(object[] args)
@@ -206,14 +243,15 @@ namespace Sevenisko.SharpWood
                 {
                     player = pl;
                 }
+            }
 
-                if(pl.ID == attackerID)
+            foreach (OakwoodPlayer pl in Oakwood.Players)
+            {
+                if (pl.ID == attackerID)
                 {
                     attacker = pl;
                 }
             }
-
-            if (player.Health == 0) player.Killer = attacker;
 
             if(OnPlayerHit != null) OnPlayerHit(player, attacker, damage);
         }
@@ -265,8 +303,6 @@ namespace Sevenisko.SharpWood
             int vKey = int.Parse(args[1].ToString());
             int isD = int.Parse(args[2].ToString());
 
-            bool isDown = isD != 0;
-
             OakwoodPlayer player = null;
 
             foreach (OakwoodPlayer p in Oakwood.Players)
@@ -280,11 +316,11 @@ namespace Sevenisko.SharpWood
 
             if(isD == 0)
             {
-                if (OnPlayerKeyDown != null) OnPlayerKeyDown(player, (VirtualKey)vKey);
+                if (OnPlayerKeyDown != null) OnPlayerKeyUp(player, (VirtualKey)vKey); 
             }
             else
             {
-                if (OnPlayerKeyUp != null) OnPlayerKeyUp(player, (VirtualKey)vKey);
+                if (OnPlayerKeyUp != null) OnPlayerKeyDown(player, (VirtualKey)vKey);
             }
         }
 
@@ -301,6 +337,8 @@ namespace Sevenisko.SharpWood
                     vehicle = veh;
                 }
             }
+
+            vehicle.Despawn();
 
             if(OnVehicleDestroy != null) OnVehicleDestroy(vehicle);
         }
@@ -320,9 +358,9 @@ namespace Sevenisko.SharpWood
                 }
             }
 
-            if(OnPlayerDisconnect != null) OnPlayerDisconnect(player);
-
             Oakwood.Players.Remove(player);
+
+            if (OnPlayerDisconnect != null) OnPlayerDisconnect(player);
         }
 
         internal static void OnChat(object[] args)
@@ -348,15 +386,16 @@ namespace Sevenisko.SharpWood
 
                 if (cmd.Substring(1) == "shwood")
                 {
-                    player.HUD.Message($"SharpWood {Oakwood.GetVersion()} made by Sevenisko.", OakColor.White);
-                    player.HUD.Message($"Command System customized by NanobotZ.", OakColor.White);
+                    player.HUD.Message($"SharpWood {Oakwood.GetVersion()} made by Sevenisko & NanobotZ.", OakColor.White);
                 }
                 else if (cmd.Substring(1) == "help")
                 {
                     player.SendMessage($"Command help:");
                     for (int i = 0; i < OakwoodCommandSystem.cmdDescriptions.Count; i++)
                     {
-                        player.SendMessage($" > {OakwoodCommandSystem.cmdDescriptions[i]}");
+                        string[] welp = OakwoodCommandSystem.cmdDescriptions[i].Split(new string[] { " - " }, StringSplitOptions.None);
+                        player.SendMessage($"> {welp[0]}");
+                        player.SendMessage($" -> {welp[1]}");
                     }
                 }
                 else if (!OakwoodCommandSystem.ExecuteCommand(player, cmd.Substring(1), cmdargs))

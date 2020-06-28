@@ -208,7 +208,18 @@ namespace Sevenisko.SharpWood
             return false;
         }
 
-        
+        internal static bool Clear(OakwoodPlayer player)
+        {
+            int ret = int.Parse(Oakwood.CallFunction("oak_chat_clear", new object[] { player.ID })[0].ToString());
+
+            if (ret == 0)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
         internal static bool SendAll(string message)
         {
             int ret = int.Parse(Oakwood.CallFunction("oak_chat_broadcast", new object[] { message + "\0", message.Length + 1 })[0].ToString());
