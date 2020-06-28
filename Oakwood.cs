@@ -203,13 +203,13 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Gives player a weapon
         /// </summary>
-        /// <param name="weaponID">Weapon ID</param>
+        /// <param name="weapon">Weapon</param>
         /// <param name="ammoLoaded">Ammo in magazine</param>
         /// <param name="ammoInInventory">Ammo in inventory</param>
         /// <returns>True if function is successful.</returns>
-        public bool GiveWeapon(int weaponID, int ammoLoaded, int ammoInInventory)
+        public bool GiveWeapon(OakwoodWeapon weapon, int ammoLoaded, int ammoInInventory)
         {
-            object[] response = Oakwood.CallFunction("oak_player_give_weapon", new object[] { ID, weaponID, ammoLoaded, ammoInInventory });
+            object[] response = Oakwood.CallFunction("oak_player_give_weapon", new object[] { ID, (int)weapon, ammoLoaded, ammoInInventory });
 
             int ret = int.Parse(response[1].ToString());
 
@@ -224,11 +224,11 @@ namespace Sevenisko.SharpWood
         /// <summary>
         /// Removes a weapon from player's inventory
         /// </summary>
-        /// <param name="weaponID">Weapon ID</param>
+        /// <param name="weapon">Weapon</param>
         /// <returns>True if function is successful.</returns>
-        public bool RemoveWeapon(int weaponID)
+        public bool RemoveWeapon(OakwoodWeapon weapon)
         {
-            object[] response = Oakwood.CallFunction("oak_player_remove_weapon", new object[] { ID, weaponID });
+            object[] response = Oakwood.CallFunction("oak_player_remove_weapon", new object[] { ID, (int)weapon });
 
             int ret = int.Parse(response[1].ToString());
 
@@ -393,6 +393,7 @@ namespace Sevenisko.SharpWood
 
             if (ret == 0)
             {
+                Vehicle = null;
                 return true;
             }
 
@@ -918,6 +919,17 @@ namespace Sevenisko.SharpWood
         /// <returns>True if function is successful</returns>
         public bool Despawn()
         {
+            var playersInVehicle = new List<OakwoodPlayer>();
+            foreach (VehicleSeat seat in Enum.GetValues(typeof(VehicleSeat)))
+            {
+                if (seat == VehicleSeat.None)
+                    continue;
+
+                var player = AtSeat(seat);
+                if (player != null)
+                    playersInVehicle.Add(player);
+            }
+
             int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_despawn", new object[] { ID })[1].ToString());
 
             if (ret == 0)
@@ -926,6 +938,8 @@ namespace Sevenisko.SharpWood
                 {
                     if (veh.ID == ID)
                     {
+                        foreach (var player in playersInVehicle)
+                            player.Vehicle = null;
                         Oakwood.Vehicles.Remove(veh);
                         break;
                     }
@@ -995,7 +1009,7 @@ namespace Sevenisko.SharpWood
 
         private bool SetHeading(float angle)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_direction_set", new object[] { ID, angle })[1].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_heading_set", new object[] { ID, angle })[1].ToString());
 
             if (ret == 0)
             {
@@ -1327,14 +1341,8 @@ namespace Sevenisko.SharpWood
 
             string res = Oakwood.CallFunction("oak_vehicle_player_at_seat", new object[] { ID, (int)seat })[1].ToString();
 
-            if (res == "4294967293")
-            {
-                return null;
-            }
-
-            int ret = int.Parse(res);
-
-            if (ret == -1)
+            uint ret = uint.Parse(res);
+            if (ret >= int.MaxValue)
             {
                 return null;
             }
@@ -1411,6 +1419,8 @@ namespace Sevenisko.SharpWood
 
         static int reqSocket;
         static int respSocket;
+
+        static object networkLock;
 
         /// <summary>
         /// Prints a message into server console
@@ -1493,36 +1503,37 @@ namespace Sevenisko.SharpWood
                 throw new Exception("Cannot connect to server!");
             }
 
-            Timer updateTimer = new Timer();
-            updateTimer.Interval = 5;
-            updateTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
+            while (true)
             {
                 eventThreadTimeout = 0;
 
-                byte[] data = Nanomsg.Receive(respSocket, Nanomsg.SendRecvFlags.DONTWAIT);
-
-                if (data != null)
+                lock (networkLock)
                 {
-                    MPack rec = MPack.ParseFromBytes(data);
-
-                    string eventName = rec[0].ToString();
-
-                    List<object> args = new List<object>();
-
-                    foreach (MPack v in ((MPackArray)rec).Skip(1))
+                    byte[] data;
+                    while ((data = Nanomsg.Receive(respSocket, Nanomsg.SendRecvFlags.DONTWAIT)) != null)
                     {
-                        args.Add(v.Value);
-                    }
+                        MPack rec = MPack.ParseFromBytes(data);
 
-                    if (!OakwoodCommandSystem.CallEvent(eventName, args.ToArray()))
-                    {
-                        Log("EventHandler", $"Error: Cannot call event '{eventName}'!");
-                    }
+                        string eventName = rec[0].ToString();
 
-                    Nanomsg.Send(respSocket, Encoding.UTF8.GetBytes("ok"), Nanomsg.SendRecvFlags.DONTWAIT);
+                        List<object> args = new List<object>();
+
+                        foreach (MPack v in ((MPackArray)rec).Skip(1))
+                        {
+                            args.Add(v.Value);
+                        }
+
+                        if (!OakwoodCommandSystem.CallEvent(eventName, args.ToArray()))
+                        {
+                            Log("EventHandler", $"Error: Cannot call event '{eventName}'!");
+                        }
+
+                        Nanomsg.Send(respSocket, Encoding.UTF8.GetBytes("ok"), Nanomsg.SendRecvFlags.DONTWAIT);
+                    }
                 }
-            };
-            updateTimer.Start();
+
+                Thread.Sleep(2);
+            }
         }
 
         internal static object[] CallFunction(string functionName, params object[] args)
@@ -1542,10 +1553,14 @@ namespace Sevenisko.SharpWood
             req.Add(arg);
 
             byte[] data = req.EncodeToBytes();
+            byte[] d;
 
-            Nanomsg.Send(reqSocket, data, Nanomsg.SendRecvFlags.DONTWAIT);
+            lock (networkLock)
+            {
+                Nanomsg.Send(reqSocket, data, Nanomsg.SendRecvFlags.DONTWAIT);
 
-            byte[] d = Nanomsg.Receive(reqSocket, Nanomsg.SendRecvFlags.NONE);
+                d = Nanomsg.Receive(reqSocket, Nanomsg.SendRecvFlags.NONE);
+            }
 
             MPackArray res;
 
@@ -1594,10 +1609,14 @@ namespace Sevenisko.SharpWood
             req.Add(arg);
 
             byte[] data = req.EncodeToBytes();
+            byte[] d;
 
-            Nanomsg.Send(reqSocket, data, Nanomsg.SendRecvFlags.DONTWAIT);
+            lock (networkLock)
+            {
+                Nanomsg.Send(reqSocket, data, Nanomsg.SendRecvFlags.DONTWAIT);
 
-            byte[] d = Nanomsg.Receive(reqSocket, Nanomsg.SendRecvFlags.NONE);
+                d = Nanomsg.Receive(reqSocket, Nanomsg.SendRecvFlags.NONE);
+            }
 
             MPackArray res;
 
@@ -1784,6 +1803,8 @@ namespace Sevenisko.SharpWood
 
             if (!IsRunning)
             {
+                networkLock = new object();
+
                 string inboundAddr = "ipc://oakwood-inbound";
                 string outboundAddr = "ipc://oakwood-outbound";
 
@@ -1812,7 +1833,7 @@ namespace Sevenisko.SharpWood
                 }
 
                 Debug.Assert(Nanomsg.SetSockOpt(reqSocket, Nanomsg.SocketOption.SUB_SUBSCRIBE, 0) >= 0);
-
+                
                 APIThread = new Thread(() => UpdateClient(outboundAddr));
 
                 ListenerThread = new Thread(() => UpdateEvents(inboundAddr));
@@ -1823,7 +1844,7 @@ namespace Sevenisko.SharpWood
                 APIThread.Name = "Function Call Thread";
                 WatchdogThread.Name = "Watchdog Thread";
 
-                OakwoodCommandSystem.Init(Assembly.GetCallingAssembly().GetTypes().SelectMany(t => t.GetMethods(BindingFlags.NonPublic | BindingFlags.Static)).ToArray());
+                OakwoodCommandSystem.Init(Assembly.GetCallingAssembly().GetTypes().SelectMany(t => t.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)).ToArray());
 
                 APIThread.Start();
 
