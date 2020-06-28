@@ -1247,6 +1247,8 @@ namespace Sevenisko.SharpWood
         static int reqSocket;
         static int respSocket;
 
+        static object networkLock;
+
         /// <summary>
         /// Prints a message into server console
         /// </summary>
@@ -1330,38 +1332,34 @@ namespace Sevenisko.SharpWood
 
             while (true)
             {
-                //Timer updateTimer = new Timer();
-                //updateTimer.Interval = 5;
-                //updateTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
-                //{
-                    eventThreadTimeout = 0;
+                eventThreadTimeout = 0;
 
-                byte[] data;
-                
-                while( (data = Nanomsg.Receive(respSocket, Nanomsg.SendRecvFlags.DONTWAIT)) != null )
+                lock (networkLock)
                 {
-                    MPack rec = MPack.ParseFromBytes(data);
-
-                    string eventName = rec[0].ToString();
-
-                    List<object> args = new List<object>();
-
-                    foreach (MPack v in ((MPackArray)rec).Skip(1))
+                    byte[] data;
+                    while ((data = Nanomsg.Receive(respSocket, Nanomsg.SendRecvFlags.DONTWAIT)) != null)
                     {
-                        args.Add(v.Value);
-                    }
+                        MPack rec = MPack.ParseFromBytes(data);
 
-                    if (!OakwoodCommandSystem.CallEvent(eventName, args.ToArray()))
-                    {
-                        Log("EventHandler", $"Error: Cannot call event '{eventName}'!");
-                    }
+                        string eventName = rec[0].ToString();
 
-                    Nanomsg.Send(respSocket, Encoding.UTF8.GetBytes("ok"), Nanomsg.SendRecvFlags.DONTWAIT);
+                        List<object> args = new List<object>();
+
+                        foreach (MPack v in ((MPackArray)rec).Skip(1))
+                        {
+                            args.Add(v.Value);
+                        }
+
+                        if (!OakwoodCommandSystem.CallEvent(eventName, args.ToArray()))
+                        {
+                            Log("EventHandler", $"Error: Cannot call event '{eventName}'!");
+                        }
+
+                        Nanomsg.Send(respSocket, Encoding.UTF8.GetBytes("ok"), Nanomsg.SendRecvFlags.DONTWAIT);
+                    }
                 }
 
                 Thread.Sleep(2);
-                //};
-                //updateTimer.Start();
             }
         }
 
@@ -1382,10 +1380,14 @@ namespace Sevenisko.SharpWood
             req.Add(arg);
 
             byte[] data = req.EncodeToBytes();
+            byte[] d;
 
-            Nanomsg.Send(reqSocket, data, Nanomsg.SendRecvFlags.DONTWAIT);
+            lock (networkLock)
+            {
+                Nanomsg.Send(reqSocket, data, Nanomsg.SendRecvFlags.DONTWAIT);
 
-            byte[] d = Nanomsg.Receive(reqSocket, Nanomsg.SendRecvFlags.NONE);
+                d = Nanomsg.Receive(reqSocket, Nanomsg.SendRecvFlags.NONE);
+            }
 
             MPackArray res;
 
@@ -1434,10 +1436,14 @@ namespace Sevenisko.SharpWood
             req.Add(arg);
 
             byte[] data = req.EncodeToBytes();
+            byte[] d;
 
-            Nanomsg.Send(reqSocket, data, Nanomsg.SendRecvFlags.DONTWAIT);
+            lock (networkLock)
+            {
+                Nanomsg.Send(reqSocket, data, Nanomsg.SendRecvFlags.DONTWAIT);
 
-            byte[] d = Nanomsg.Receive(reqSocket, Nanomsg.SendRecvFlags.NONE);
+                d = Nanomsg.Receive(reqSocket, Nanomsg.SendRecvFlags.NONE);
+            }
 
             MPackArray res;
 
@@ -1623,6 +1629,8 @@ namespace Sevenisko.SharpWood
 
             if (!IsRunning)
             {
+                networkLock = new object();
+
                 string inboundAddr = "ipc://oakwood-inbound";
                 string outboundAddr = "ipc://oakwood-outbound";
 
