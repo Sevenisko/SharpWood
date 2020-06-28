@@ -919,7 +919,7 @@ namespace Sevenisko.SharpWood
 
         private bool SetHeading(float angle)
         {
-            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_direction_set", new object[] { ID, angle })[1].ToString());
+            int ret = int.Parse(Oakwood.CallFunction("oak_vehicle_heading_set", new object[] { ID, angle })[1].ToString());
 
             if (ret == 0)
             {
@@ -1328,15 +1328,17 @@ namespace Sevenisko.SharpWood
                 throw new Exception("Cannot connect to server!");
             }
 
-            Timer updateTimer = new Timer();
-            updateTimer.Interval = 5;
-            updateTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
+            while (true)
             {
-                eventThreadTimeout = 0;
+                //Timer updateTimer = new Timer();
+                //updateTimer.Interval = 5;
+                //updateTimer.Elapsed += (object sender, ElapsedEventArgs e) =>
+                //{
+                    eventThreadTimeout = 0;
 
-                byte[] data = Nanomsg.Receive(respSocket, Nanomsg.SendRecvFlags.DONTWAIT);
-
-                if (data != null)
+                byte[] data;
+                
+                while( (data = Nanomsg.Receive(respSocket, Nanomsg.SendRecvFlags.DONTWAIT)) != null )
                 {
                     MPack rec = MPack.ParseFromBytes(data);
 
@@ -1356,8 +1358,11 @@ namespace Sevenisko.SharpWood
 
                     Nanomsg.Send(respSocket, Encoding.UTF8.GetBytes("ok"), Nanomsg.SendRecvFlags.DONTWAIT);
                 }
-            };
-            updateTimer.Start();
+
+                Thread.Sleep(2);
+                //};
+                //updateTimer.Start();
+            }
         }
 
         internal static object[] CallFunction(string functionName, params object[] args)
