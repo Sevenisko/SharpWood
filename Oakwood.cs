@@ -13,11 +13,25 @@ using System.IO;
 
 namespace Sevenisko.SharpWood
 {
+    internal class OakwoodWeap
+    {
+        internal OakwoodWeapon Weapon;
+        internal int Ammo1, Ammo2;
+        public OakwoodWeap(OakwoodWeapon weapon, int ammo1, int ammo2)
+        {
+            Weapon = weapon;
+            Ammo1 = ammo1;
+            Ammo2 = ammo2;
+        }
+    }
+
     /// <summary>
     /// Player class
     /// </summary>
     public class OakwoodPlayer
     {
+        OakwoodWeap[] inventory = new OakwoodWeap[8];
+
         /// <summary>
         /// Player name
         /// </summary>
@@ -209,16 +223,45 @@ namespace Sevenisko.SharpWood
         /// <returns>True if function is successful.</returns>
         public bool GiveWeapon(OakwoodWeapon weapon, int ammoLoaded, int ammoInInventory)
         {
-            object[] response = Oakwood.CallFunction("oak_player_give_weapon", new object[] { ID, (int)weapon, ammoLoaded, ammoInInventory });
-
-            int ret = int.Parse(response[1].ToString());
-
-            if (ret == 0)
+            for (int i = 0; i < inventory.Length; i++)
             {
-                return true;
+                if (inventory[i] == null || i == inventory.Length - 1)
+                {
+                    object[] response = Oakwood.CallFunction("oak_player_give_weapon", new object[] { ID, (int)weapon, ammoLoaded, ammoInInventory });
+
+                    int ret = int.Parse(response[1].ToString());
+
+                    if (ret == 0)
+                    {
+                        inventory[i] = new OakwoodWeap(weapon, ammoLoaded, ammoInInventory);
+
+                        return true;
+                    }
+
+                    return false;
+                }
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Clears player's inventory
+        /// </summary>
+        /// <returns>True if functions was successful</returns>
+        public bool ClearInventory()
+        {
+            bool ret = false;
+
+            for (int i = 0; i < inventory.Length; i++)
+            {
+                if (inventory[i] != null)
+                {
+                    ret = RemoveWeapon(inventory[i].Weapon);      
+                }
+            }
+
+            return ret;
         }
 
         /// <summary>
@@ -228,13 +271,21 @@ namespace Sevenisko.SharpWood
         /// <returns>True if function is successful.</returns>
         public bool RemoveWeapon(OakwoodWeapon weapon)
         {
-            object[] response = Oakwood.CallFunction("oak_player_remove_weapon", new object[] { ID, (int)weapon });
-
-            int ret = int.Parse(response[1].ToString());
-
-            if (ret == 0)
+            for(int i = 0; i < inventory.Length; i++)
             {
-                return true;
+                if(inventory[i] != null && inventory[i].Weapon == weapon)
+                {
+                    object[] response = Oakwood.CallFunction("oak_player_remove_weapon", new object[] { ID, (int)weapon });
+
+                    int ret = int.Parse(response[1].ToString());
+
+                    if (ret == 0)
+                    {
+                        return true;
+                    }
+
+                    return false;
+                }
             }
 
             return false;
@@ -1382,7 +1433,7 @@ namespace Sevenisko.SharpWood
 
     /// <summary>
     /// The main class for SharpWood
-    /// </summary>
+    /// </summary>    
     public class Oakwood
     {
         public delegate bool EventHandler(CtrlType sig);

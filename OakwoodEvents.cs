@@ -59,7 +59,7 @@ namespace Sevenisko.SharpWood
         /// </summary>
         public static event OnPKeyDown OnPlayerKeyUp;
 
-        public delegate void OnPDeath(OakwoodPlayer player, OakwoodPlayer killer, int reason, int hitType, int playerPart);
+        public delegate void OnPDeath(OakwoodPlayer player, OakwoodPlayer killer, DeathType deathType, BodyPart playerPart);
         /// <summary>
         /// Triggered when player dies
         /// </summary>
@@ -109,7 +109,7 @@ namespace Sevenisko.SharpWood
 
         internal static void start(object[] args)
         {
-            OakMisc.Log($"SharpWood {Oakwood.GetVersion()} successfuly started on this server!");
+            OakMisc.Log($"^F[^5INFO^F] SharpWood {Oakwood.GetVersion()} ^Asuccessfully ^Fstarted on this server!^R");
             Console.WriteLine($"[INFO] Registered {OakwoodCommandSystem.GetCommandCount()} commands, {OakwoodCommandSystem.GetEventCount()} events");
             if(OnStart != null) OnStart();
         }
@@ -162,7 +162,7 @@ namespace Sevenisko.SharpWood
 
             if (newPlayer.Name == "|>>>failed<<<|" || newPlayer.Name == "Server")
             {
-                newPlayer.Kick("Player name cannot be empty!");
+                newPlayer.Kick("Invalid player name!");
             }
             else
             {
@@ -184,7 +184,7 @@ namespace Sevenisko.SharpWood
             {
                 case "shwood":
                     {
-                        OakMisc.Log($"This server is using SharpWood {Oakwood.GetVersion()} made by Sevenisko.");
+                        OakMisc.Log($"This server is using SharpWood {Oakwood.GetVersion()} made by Sevenisko & NanobotZ.");
                     }
                     break;
                 case "shwood-throwfatal":
@@ -225,7 +225,23 @@ namespace Sevenisko.SharpWood
                 }
             }
 
-            if (OnPlayerDeath != null) OnPlayerDeath(player, killer, reason, hitType, playerPart);
+            player.Vehicle = null;
+
+            player.ClearInventory();
+
+            DeathType deathType = (DeathType)hitType;
+
+            switch(reason)
+            {
+                case 1:
+                    deathType = DeathType.OutOfWorld;
+                    break;
+                case 2:
+                    deathType = DeathType.Drowned;
+                    break;
+            }
+
+            if (OnPlayerDeath != null) OnPlayerDeath(player, killer, deathType, (BodyPart)playerPart);
         }
 
         internal static void OnPlHit(object[] args)
@@ -305,6 +321,8 @@ namespace Sevenisko.SharpWood
 
             OakwoodPlayer player = null;
 
+            bool isDown = isD == 1;
+          
             foreach (OakwoodPlayer p in Oakwood.Players)
             {
                 if (p.ID == plID)
@@ -395,7 +413,7 @@ namespace Sevenisko.SharpWood
                     {
                         string[] welp = OakwoodCommandSystem.cmdDescriptions[i].Split(new string[] { " - " }, StringSplitOptions.None);
                         player.SendMessage($"> {welp[0]}");
-                        player.SendMessage($" -> {welp[1]}");
+                        player.SendMessage($" {{888888}}-> {{cccccc}}{welp[1]}");
                     }
                 }
                 else if (!OakwoodCommandSystem.ExecuteCommand(player, cmd.Substring(1), cmdargs))

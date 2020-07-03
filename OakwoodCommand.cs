@@ -82,7 +82,7 @@ namespace Sevenisko.SharpWood
                     var methodParams = method.GetParameters();
                     var paramsOk = true;
                     var hadPlayerAlready = false;
-                    var usage = $"/{attribute.command}";
+                    var usage = $"{{00ff00}}/{attribute.command}";
                     var stringBuilder = new StringBuilder();
                     foreach (var methodParam in methodParams)
                     {
@@ -104,9 +104,9 @@ namespace Sevenisko.SharpWood
                         }
 
                         if (methodParam.IsOptional)
-                            stringBuilder.Append($" ({typeDictionary[methodParam.ParameterType]} {methodParam.Name})");
+                            stringBuilder.Append($" {{992200}}({typeDictionary[methodParam.ParameterType]} {methodParam.Name})");
                         else
-                            stringBuilder.Append($" <{typeDictionary[methodParam.ParameterType]} {methodParam.Name}>");
+                            stringBuilder.Append($" {{ffaa00}}<{typeDictionary[methodParam.ParameterType]} {methodParam.Name}>");
                     }
 
                     if (!paramsOk)
@@ -131,7 +131,7 @@ namespace Sevenisko.SharpWood
 
                                 if (args.Length < methodParameters.Count(mp => !mp.HasDefaultValue) - playerParamsCount)
                                 {
-                                    OakChat.Send(player, "Usage: " + usage);
+                                    OakChat.Send(player, "[{00ff00}USAGE{ffffff}] " + usage);
                                     return;
                                 }
 
@@ -156,7 +156,7 @@ namespace Sevenisko.SharpWood
                                             else
                                             {
                                                 Console.WriteLine(ex.Message);
-                                                OakChat.Send(player, $"Invalid value for parameter '{methodParameter.Name}', should be of type {typeDictionary[methodParameter.ParameterType]}.");
+                                                OakChat.Send(player, $"{{ffffff}}Invalid value for parameter {{00ff00}}'{methodParameter.Name}'{{ffffff}}, should be of type {{00ff00}}{typeDictionary[methodParameter.ParameterType]}{{ffffff}}.");
                                                 return;
                                             }
                                         }
@@ -169,7 +169,7 @@ namespace Sevenisko.SharpWood
                             }
                             catch (Exception ex)
                             {
-                                OakChat.Send(player, "Something went wrong while processing the command.");
+                                OakChat.Send(player, "Something went {00ff00}wrong {ffffff}while processing the command.");
                                 Console.WriteLine("[ERROR] " + ex.ToString());
                                 return;
                             }

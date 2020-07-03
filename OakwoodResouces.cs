@@ -7,9 +7,92 @@ namespace Sevenisko.SharpWood
 {
     public enum DialogType
     {
-        MsgBox, // Normal Message Box
-        Input, // Text Input
-        Password // Password Input
+        /// <summary>
+        /// Message Box
+        /// </summary>
+        MsgBox,
+        /// <summary>
+        /// Input Box
+        /// </summary>
+        Input,
+        /// <summary>
+        /// Input Box with Password
+        /// </summary>
+        Password
+    }
+
+    /// <summary>
+    /// Death Type
+    /// </summary>
+    public enum DeathType
+    {
+        /// <summary>
+        /// Generic player death
+        /// </summary>
+        Unknown = 1,
+        /// <summary>
+        /// Happens when player is killed by explosion
+        /// </summary>
+        Explosion,
+        /// <summary>
+        /// Happens when player died because of flames
+        /// </summary>
+        Fire,
+        /// <summary>
+        /// Happens when player drives straight into water in car (or just crashes with car)
+        /// </summary>
+        CarCrash = 5,
+        /// <summary>
+        /// Happens when player is killed by fall damage
+        /// </summary>
+        HardGroundHit,
+        /// <summary>
+        /// Happens when player is somehow killed by car
+        /// </summary>
+        KilledByCar = 8,
+        /// <summary>
+        /// Happens when player jumps into water
+        /// </summary>
+        Drowned,
+        /// <summary>
+        /// Happens when player falls out of the world
+        /// </summary>
+        OutOfWorld,
+    }
+
+    /// <summary>
+    /// Player Body Part
+    /// </summary>
+    public enum BodyPart
+    {
+        /// <summary>
+        /// Unknown Body Part
+        /// </summary>
+        Unknown,
+        /// <summary>
+        /// Right Hand
+        /// </summary>
+        RightHand,
+        /// <summary>
+        /// Left Hand
+        /// </summary>
+        LeftHand,
+        /// <summary>
+        /// Right Leg
+        /// </summary>
+        RightLeg,
+        /// <summary>
+        /// Left Leg
+        /// </summary>
+        LeftLeg,
+        /// <summary>
+        /// Torso
+        /// </summary>
+        Torso,
+        /// <summary>
+        /// Head
+        /// </summary>
+        Head
     }
 
     /// <summary>
